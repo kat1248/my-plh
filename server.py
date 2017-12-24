@@ -164,7 +164,7 @@ def character_info(name):
     zkill = lookup_zkill_character(cid)
     char['danger'] = zkill.get('dangerRatio', 0)
     char['gang'] = zkill.get('gangRatio', 0)
-    kills = char['kills'] = zkill.get('shipsDestroyed', 0)
+    kills = zkill.get('shipsDestroyed', 0)
     char['kills'] = kills
     losses = zkill.get('shipsLost', 0)
     char['losses'] = losses
