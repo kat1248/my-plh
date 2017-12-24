@@ -31,46 +31,46 @@ def templated(template=None):
     return decorator
 
 def cached(timeout=60 * 60, key='ccp'):
-	def decorator(f):
-		@wraps(f)
-		def decorated_function(*args, **kwargs):
-			cache_key = '{0}:{1}'.format(key, args[0])
-			rv = cache.get(cache_key)
-			if rv is not None:
-				return rv
-			rv = f(*args, **kwargs)
-			cache.set(cache_key, rv, timeout=timeout)
-			return rv
-		return decorated_function
-	return decorator
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            cache_key = '{0}:{1}'.format(key, args[0])
+            rv = cache.get(cache_key)
+            if rv is not None:
+                return rv
+            rv = f(*args, **kwargs)
+            cache.set(cache_key, rv, timeout=timeout)
+            return rv
+        return decorated_function
+    return decorator
 
 @cached()
 def name2id(name):
-	req = 'https://esi.tech.ccp.is/latest/search'
-	payload = {'categories': 'character', 'datasource': 'tranquility', 'language': 'en-us', 'search': name, 'strict': 'false'}
-	r = requests.get(req, params=payload)
-	d = json.loads(r.text)
-	chars = d.get('character', [])
-	return chars
+    req = 'https://esi.tech.ccp.is/latest/search'
+    payload = {'categories': 'character', 'datasource': 'tranquility', 'language': 'en-us', 'search': name, 'strict': 'false'}
+    r = requests.get(req, params=payload)
+    d = json.loads(r.text)
+    chars = d.get('character', [])
+    return chars
 
 @cached()
 def id2record(cid):
-	req = 'https://esi.tech.ccp.is/latest/characters/{0}'.format(cid)
-	payload = {'datasource': 'tranquility'}
-	r = requests.get(req, params=payload)
-	return json.loads(r.text)
+    req = 'https://esi.tech.ccp.is/latest/characters/{0}'.format(cid)
+    payload = {'datasource': 'tranquility'}
+    r = requests.get(req, params=payload)
+    return json.loads(r.text)
 
 @cached(key='zkill')
 def lookup_zkill_character(cid):
-	req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(cid)
-	r = requests.get(req)
-	return json.loads(r.text)
+    req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(cid)
+    r = requests.get(req)
+    return json.loads(r.text)
 
 @cached(key='zkill')
 def lookup_zkill_corp(cid):
-	req = 'https://zkillboard.com/api/stats/corporationID/{0}/'.format(cid)
-	r = requests.get(req)
-	return json.loads(r.text)
+    req = 'https://zkillboard.com/api/stats/corporationID/{0}/'.format(cid)
+    r = requests.get(req)
+    return json.loads(r.text)
 
 def lookup_corp_danger(cid):
     rec = lookup_zkill_corp(cid)
@@ -78,21 +78,21 @@ def lookup_corp_danger(cid):
 
 @cached()
 def lookup_corp(cid):
-	req = 'https://esi.tech.ccp.is/latest/corporations/names/'
-	payload = {'datasource': 'tranquility', 'corporation_ids': cid}
-	r = requests.get(req, params=payload)
-	d = json.loads(r.text)
-	return d[0].get('corporation_name', '')
+    req = 'https://esi.tech.ccp.is/latest/corporations/names/'
+    payload = {'datasource': 'tranquility', 'corporation_ids': cid}
+    r = requests.get(req, params=payload)
+    d = json.loads(r.text)
+    return d[0].get('corporation_name', '')
 
 @cached()
 def lookup_alliance(aid):
-	if aid == 0:
-		return ''
-	req = 'https://esi.tech.ccp.is/latest/alliances/names/'
-	payload = {'datasource': 'tranquility', 'alliance_ids': aid}
-	r = requests.get(req, params=payload)
-	d = json.loads(r.text)
-	return d[0].get('alliance_name', '')
+    if aid == 0:
+        return ''
+    req = 'https://esi.tech.ccp.is/latest/alliances/names/'
+    payload = {'datasource': 'tranquility', 'alliance_ids': aid}
+    r = requests.get(req, params=payload)
+    d = json.loads(r.text)
+    return d[0].get('alliance_name', '')
     
 def seconds_to_time_left_string(total_seconds):
     s = int(total_seconds)
@@ -121,22 +121,22 @@ def calculate_age(bday):
 
 @cached(key='kill')
 def fetch_last_kill(cid):
-	req = 'https://zkillboard.com/api/stats/characterID/{0}/limit/1/'.format(cid)
-	r = requests.get(req)
-	d = json.loads(r.text)[0]
-	victim = d['victim']
-	who = victim.get('character_id', 0)
-	return (d['killmail_time'].split("T")[0], who)
+    req = 'https://zkillboard.com/api/stats/characterID/{0}/limit/1/'.format(cid)
+    r = requests.get(req)
+    d = json.loads(r.text)[0]
+    victim = d['victim']
+    who = victim.get('character_id', 0)
+    return (d['killmail_time'].split("T")[0], who)
 
 def last_kill_activity(cid, has_killboard):
     if has_killboard:
         when, who = fetch_last_kill(cid)
         if who == cid:
-        	return 'died {0}'.format(when)
+            return 'died {0}'.format(when)
         elif who == 0:
-        	return 'struct {0}'.format(when)
+            return 'struct {0}'.format(when)
         else:
-        	return 'kill {0}'.format(when)
+            return 'kill {0}'.format(when)
     else:
         return ''
 
@@ -188,9 +188,9 @@ def character_info(name):
 def character_info_list(names):
     charlist = []
     for name in names:
-    	info = character_info(name)
-    	if info is not None:
-	        charlist.append(info)
+        info = character_info(name)
+        if info is not None:
+            charlist.append(info)
     return charlist
 
 @app.route('/')
@@ -210,18 +210,18 @@ def local():
 @app.route('/test1')
 @templated('index.html')
 def test1():
-	names = ['Albina Sobr','Allex Hotomanila','Altern Torren','Anatar Thandon','Archiater','Art CooLSpoT',
-			'Azarkhy Alfik Thiesant','Bitter Dystany','Cartelus','Chilik','Connor McCloud McMahon','Dak Ad',
-			'Darkschnyder','Davidkaa Smith','Dig Cos','Dimka Tallinn','Domenic Padre','Eudes Omaristos',
-			'FESSA13','Fineas ElMaestro','Frack Taron','g0ldent0y','Gunner wortherspoon','gunofaugust',
-			'Heior','Highshott','Irisfar Senpai','Jettero Prime','Jocelyn Rotineque']
-	return dict(charlist=character_info_list(names))
+    names = ['Albina Sobr','Allex Hotomanila','Altern Torren','Anatar Thandon','Archiater','Art CooLSpoT',
+            'Azarkhy Alfik Thiesant','Bitter Dystany','Cartelus','Chilik','Connor McCloud McMahon','Dak Ad',
+            'Darkschnyder','Davidkaa Smith','Dig Cos','Dimka Tallinn','Domenic Padre','Eudes Omaristos',
+            'FESSA13','Fineas ElMaestro','Frack Taron','g0ldent0y','Gunner wortherspoon','gunofaugust',
+            'Heior','Highshott','Irisfar Senpai','Jettero Prime','Jocelyn Rotineque']
+    return dict(charlist=character_info_list(names))
 
 @app.route('/test2')
 @templated('index.html')
 def test2():
-	names = ['Highshott','Portia Tigana']
-	return dict(charlist=character_info_list(names))
+    names = ['Highshott','Portia Tigana']
+    return dict(charlist=character_info_list(names))
 
 if __name__ == "__main__":
 #    app.run(host="10.60.42.51",debug=True)
