@@ -10,6 +10,10 @@ from datetime import date, datetime, timedelta
 import requests, json
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
+from urllib import quote
+
+app = Flask(__name__)
+cache = SimpleCache()
 
 def templated(template=None):
     def decorator(f):
@@ -41,20 +45,14 @@ def cached(timeout=60 * 60, key='ccp'):
 		return decorated_function
 	return decorator
 
-app = Flask(__name__)
-cache = SimpleCache()
-
 @cached()
 def name2id(name):
 	req = 'https://esi.tech.ccp.is/latest/search'
-	payload = {'categories': 'character', 'datasource': 'tranquility', 'language': 'en-us','search': name, 'strict': 'true'}
+	payload = {'categories': 'character', 'datasource': 'tranquility', 'language': 'en-us', 'search': name, 'strict': 'false'}
 	r = requests.get(req, params=payload)
 	d = json.loads(r.text)
 	chars = d.get('character', [])
-	if len(chars) > 0:
-		return chars[0]
-	else:
-		None
+	return chars
 
 @cached()
 def id2record(cid):
@@ -145,9 +143,24 @@ def last_kill_activity(cid, has_killboard):
 
 @cached(key='char')
 def character_info(name):
-    cid = name2id(name)
+    cids = name2id(name)
+    cid = None
+    record = {}
+    if len(cids) == 0:
+        cid = None
+    elif len(cids) == 1:
+        cid = cids[0]
+    else:
+        for nid in cids:         
+            record = id2record(nid)
+            print record['name']
+            if record['name'] == name:
+                print "break"
+                cid = nid
+                break
     if cid is None:
-    	return None
+        return None
+    record = id2record(cid)
     char = {}
     char['name'] = name
     char['cid'] = cid
@@ -161,7 +174,6 @@ def character_info(name):
     has_killboard = (kills != 0) or (losses != 0)
     char['has_killboard'] = has_killboard
     char['last_kill'] = last_kill_activity(cid, has_killboard)
-    record = id2record(cid)
     corp_id = record.get('corporation_id', 0)
     npc_corp = False
     if corp_id < 2000000:
