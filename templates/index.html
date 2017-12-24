@@ -3,94 +3,129 @@
   <head>
     <title>Local Info</title>
     <style>
-		table, th {
-			border: 1px solid Black;
-			border-collapse: collapse;
-			padding: 3px;
-		}
-		th, td { padding: 5px; }
-		div.container { width: 100%; }
-		form {
-			border: 1px solid Gray;
-			padding: 5px;
-			margin-right: 5px;
-			float: left;
-		}
-		td img {
-			display: block;
-			margin-left: auto;
-			margin-right: auto;
-			padding: 0px;
-		}
-		tr.odd:hover, tr.even:hover { background-color: #ccc; }
-		.clearfix { overflow: auto; }
-		td.danger_alert, td.corp_alert { 
-            background-color: LightCoral;
-            }
-        td.npc_corp, td.danger_alert, td.corp_alert { 
-            -webkit-border-radius: 5px;
-            -moz-border-radius: 5px;
-            border-radius: 5px;
-        }
-        td.npc_corp { background-color: LightGreen; }
-		tr.odd { background-color: #eee; }
-		tr.even { background-color: AliceBlue; }
-		td.danger_alert, td.data { text-align: center; }
-		.thumb {
-			float: left; /* must be floated for same cross browser position of larger image */
-			position: relative;
-			margin: 3px;
-		}
-		.thumb img { 
-			border: 1px solid #000;
-			vertical-align: bottom;
-		}
-		.thumb:hover {
-			border: 0; /* IE6 needs this to show large image */
-			z-index: 1;
-		}
-		.thumb span { 
-			position: absolute;
-			visibility: hidden;
-		}
-		.thumb:hover span { 
-			visibility: visible;
-			top: 0px; left: 37px; 
-		}
+    body {
+        font-family: 'Lato',sans-serif;
+        font-size: 14px;
+        background-image: url(../images/hero-background.jpg);
+        background-position: top center;
+        background-repeat: no-repeat;
+        background-size: 100% auto;
+        background-color: #000; 
+    }
+    table {
+        border: 1px solid Black;
+        background-color: rgba(51, 122, 183, 0.5);
+        border-collapse: collapse;
+        padding: 3px;
+    }
+    th, td { 
+        padding: 5px; 
+    }
+    div.container { w
+        idth: 100%; 
+    }
+    form {
+        border: 2px solid Black;
+        padding: 5px;
+        margin-right: 5px;
+        float: left;
+    }
+    td img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0px;
+    }
+    tr.header {
+        background-color: White;
+    }
+    tr.odd:hover, tr.even:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        color: #000;
+    }
+    .clearfix { 
+        overflow: auto; 
+    }
+    td.danger_alert, td.corp_alert { 
+        border: 2px solid Red;
+    }
+    td.npc_corp, td.danger_alert, td.corp_alert { 
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+    }
+    td.npc_corp { 
+        border: 2px solid Green;
+    }
+    tr.odd { 
+        background-color: #eee; 
+    }
+    tr.even { 
+        background-color: AliceBlue;
+    }
+    tr.even, tr.odd { 
+        border: 1px solid #c6c6c6; 
+    }
+    td.danger_alert, td.data {
+        text-align: center; 
+    }
+    .thumb {
+        float: left; /* must be floated for same cross browser position of larger image */
+        position: relative;
+        margin: 3px;
+    }
+    .thumb img { 
+        border: 1px solid #000;
+        vertical-align: bottom;
+    }
+    .thumb:hover {
+        border: 0; /* IE6 needs this to show large image */
+        z-index: 1;
+    }
+    .thumb span { 
+        position: absolute;
+        visibility: hidden;
+    }
+    .thumb:hover span { 
+        visibility: visible;
+        top: 0px; left: 37px; 
+    }
     </style>
   </head>
-  <body style="background-color:lightsteelblue;">
-      <H1 style="text-align: center;">Signal Cartel's Little Helper</H1>
+  <body style="background-color: #337ab7;">
+      <H1 style="text-align: center; color: White;">Signal Cartel's Little Helper</H1>
     <div class="container">
       <form action = "{{ url_for('local') }}" method = "POST">
-	<p><textarea name="characters" placeholder="Enter Character Names" rows=10 cols=40></textarea>
-	<p><input type = "Submit" value = "Submit" /><input type="reset" /></p>
+    <p><textarea name="characters" placeholder="Enter Character Names" rows=10 cols=40></textarea>
+    <p><input type = "Submit" value = "Submit" /><input type="reset" /></p>
       </form>
       <table class="chars">
-	<caption><b>Character List</b></caption>
-	<thead><tr>
-	  <th></th><th>Name</th><th>Age</th><th>Danger</th><th>Gang</th><th>Security</th><th>Kills</th><th>Losses</th><th>Corp</th><th>Alliance</th><th>Last Activity</th></tr>
-	</thead>
-	<tfoot><tr>
-	  <th></th><th>Name</th><th>Age</th><th>Danger</th><th>Gang</th><th>Security</th><th>Kills</th><th>Losses</th><th>Corp</th><th>Alliance</th><th>Last Activity</th></tr>
-	</tfoot>
-	{% set ns = namespace(use_background=false) %}
-	{% for corp in charlist|groupby('corp_name') %}
-	{% for char in corp.list %}
-	<tr class="{% if ns.use_background %}odd{% else %}even{% endif %}">
-	  <td>
-	  	<a class="thumb" href="https://image.eveonline.com/Character/{{ char.cid }}_512.jpg">
-	  	<img src="https://image.eveonline.com/Character/{{ char.cid }}_64.jpg" height="32" width="32">
-	  	<span><img src="https://image.eveonline.com/Character/{{ char.cid }}_512.jpg" alt=""></span>
-		</a>
-	  </td>
-	  <td>{% if char.has_killboard %}<a href="https://zkillboard.com/character/{{ char.cid }}/">{{ char.name }}</a>{% else %}{{ char.name }} {% endif %}</td>
-	  <td>{{ char.age }}</td>
-	  <td class="{% if char.danger > 50 %}danger_alert{% else %}data{% endif %}">{% if char.danger > 0 %}{{ char.danger }}{% endif %}</td>	
-	  <td class="data">{% if char.gang > 0 %}{{ char.gang }}{% endif %}</td>
-	  <td class="{% if char.security < 0.0 %}danger_alert{% else %}data{% endif %}">{{ char.security }}</td>
- 	  <td class="data">{{ char.kills }}</td>
+    <thead><tr  class="header">
+      <th></th><th>Name</th><th>Age</th><th>Danger</th><th>Gang</th><th>Security</th><th>Kills</th><th>Losses</th>
+      <th></th><th>Corp</th><th>Alliance</th><th>Last Activity</th></tr>
+    </thead>
+    <tfoot><tr class="header">
+      <th></th><th>Name</th><th>Age</th><th>Danger</th><th>Gang</th><th>Security</th><th>Kills</th><th>Losses</th>
+      <th></th><th>Corp</th><th>Alliance</th><th>Last Activity</th></tr>
+    </tfoot>
+    {% set ns = namespace(use_background=false) %}
+    {% for corp in charlist|groupby('corp_name') %}
+    {% for char in corp.list %}
+    <tr class="{% if ns.use_background %}odd{% else %}even{% endif %}">
+      <td>
+        <a class="thumb" href="https://image.eveonline.com/Character/{{ char.cid }}_512.jpg">
+        <img src="https://image.eveonline.com/Character/{{ char.cid }}_64.jpg" height="32" width="32">
+        <span><img src="https://image.eveonline.com/Character/{{ char.cid }}_512.jpg" alt=""></span>
+        </a>
+      </td>
+      <td>{% if char.has_killboard %}<a href="https://zkillboard.com/character/{{ char.cid }}/">{{ char.name }}</a>{% else %}{{ char.name }} {% endif %}</td>
+      <td>{{ char.age }}</td>
+      <td class="{% if char.danger > 50 %}danger_alert{% else %}data{% endif %}">{% if char.danger > 0 %}{{ char.danger }}{% endif %}</td>  
+      <td class="data">{% if char.gang > 0 %}{{ char.gang }}{% endif %}</td>
+      <td class="{% if char.security < 0.0 %}danger_alert{% else %}data{% endif %}">{{ char.security }}</td>
+      <td class="data">{{ char.kills }}</td>
       <td class="data">{{ char.losses }}</td>
+      <td><img src="https://imageserver.eveonline.com/Corporation/{{ char.corp_id }}_64.png" height="32" width="32"></td>
       <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.npc_corp %} class="npc_corp"{% endif %} title="{{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/">{{ char.corp_name }}</a></td>
       <td>{{ char.alliance }}</td>
       <td>{{ char.last_kill }}</td>
