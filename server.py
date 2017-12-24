@@ -10,7 +10,6 @@ from datetime import date, datetime, timedelta
 import requests, json
 from functools import wraps
 from werkzeug.contrib.cache import SimpleCache
-from urllib import quote
 
 app = Flask(__name__)
 cache = SimpleCache()
