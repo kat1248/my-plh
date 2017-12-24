@@ -153,9 +153,7 @@ def character_info(name):
     else:
         for nid in cids:         
             record = id2record(nid)
-            print record['name']
             if record['name'] == name:
-                print "break"
                 cid = nid
                 break
     if cid is None:
