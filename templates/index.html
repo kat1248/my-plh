@@ -1,15 +1,11 @@
 <!doctype html>
 <html>
   <head>
-    <title>Local Info</title>
+    <title>Signal Cartel's Little Helper</title>
     <style>
     body {
         font-family: 'Lato',sans-serif;
         font-size: 14px;
-        background-image: url(../images/hero-background.jpg);
-        background-position: top center;
-        background-repeat: no-repeat;
-        background-size: 100% auto;
         background-color: #000; 
     }
     table {
@@ -28,6 +24,7 @@
         border: 2px solid Black;
         padding: 5px;
         margin-right: 5px;
+        border-radius: 5px;
         float: left;
     }
     td img {
@@ -46,15 +43,12 @@
         overflow: auto; 
     }
     td.danger_alert, td.corp_alert { 
-        border: 2px solid Red;
-    }
-    td.npc_corp, td.danger_alert, td.corp_alert { 
-        -webkit-border-radius: 5px;
-        -moz-border-radius: 5px;
-        border-radius: 5px;
+        border: 3px solid Red;
+        border-style: groove;
     }
     td.npc_corp { 
-        border: 2px solid Green;
+        border: 3px solid Green;
+        border-style: groove;
     }
     tr.odd { 
         background-color: GainsBoro;
@@ -68,51 +62,57 @@
     td.danger_alert, td.data {
         text-align: center; 
     }
-    .thumb {
+    .danger_thumb, .thumb {
         float: left; /* must be floated for same cross browser position of larger image */
         position: relative;
         margin: 3px;
     }
-    .thumb img { 
-        border: 1px solid #000;
+    .thumb img, .danger_thumb img { 
+        border-style: groove;
         vertical-align: bottom;
     }
-    .thumb:hover {
+    .thumb img { 
+        border: 3px solid #000;
+    }
+    .danger_thumb img {
+        border: 3px solid Red;
+    }
+    .danger_thumb:hover, .thumb:hover {
         border: 0; /* IE6 needs this to show large image */
         z-index: 1;
     }
-    .thumb span { 
+    .danger_thumb span, .thumb span { 
         position: absolute;
         visibility: hidden;
     }
-    .thumb:hover span { 
+    .danger_thumb:hover span, .thumb:hover span { 
         visibility: visible;
         top: 0px; left: 37px; 
     }
     </style>
   </head>
   <body style="background-color: #337ab7;">
-      <H1 style="text-align: center; color: White;">Signal Cartel's Little Helper</H1>
+    <H1 style="text-align: center; color: White;">Signal Cartel's Little Helper</H1>
     <div class="container">
       <form action = "{{ url_for('local') }}" method = "POST">
-    <p><textarea name="characters" placeholder="Enter Character Names" rows=10 cols=40></textarea>
-    <p><input type = "Submit" value = "Submit" /><input type="reset" /></p>
+        <p><textarea name="characters" placeholder="Enter Character Names" rows=10 cols=40></textarea>
+        <p><input type = "Submit" value = "Submit" /><input type="reset" /></p>
       </form>
       <table class="chars">
-    <thead><tr  class="header">
-      <th></th><th>Name</th><th>Age</th><th>Danger</th><th>Gang</th><th>Security</th><th>Kills</th><th>Losses</th>
-      <th></th><th>Corp</th><th>Alliance</th><th>Last Activity</th></tr>
-    </thead>
-    <tfoot><tr class="header">
-      <th></th><th>Name</th><th>Age</th><th>Danger</th><th>Gang</th><th>Security</th><th>Kills</th><th>Losses</th>
-      <th></th><th>Corp</th><th>Alliance</th><th>Last Activity</th></tr>
-    </tfoot>
+        <thead><tr  class="header">
+          <th></th><th>Name</th><th>Age</th><th>Danger</th><th>Gang</th><th>Security</th><th>Kills</th><th>Losses</th>
+          <th></th><th>Corp</th><th>Alliance</th><th>Last Activity</th></tr>
+        </thead>
+        <tfoot><tr class="header">
+          <th></th><th>Name</th><th>Age</th><th>Danger</th><th>Gang</th><th>Security</th><th>Kills</th><th>Losses</th>
+          <th></th><th>Corp</th><th>Alliance</th><th>Last Activity</th></tr>
+        </tfoot>
     {% set ns = namespace(use_background=false) %}
     {% for corp in charlist|groupby('corp_name') %}
     {% for char in corp.list %}
     <tr class="{% if ns.use_background %}odd{% else %}even{% endif %}">
       <td>
-        <a class="thumb" href="https://image.eveonline.com/Character/{{ char.cid }}_512.jpg">
+        <a class="{% if char.danger > 50 %}danger_{% endif %}thumb" href="https://image.eveonline.com/Character/{{ char.cid }}_512.jpg">
         <img src="https://image.eveonline.com/Character/{{ char.cid }}_64.jpg" height="32" width="32">
         <span><img src="https://image.eveonline.com/Character/{{ char.cid }}_512.jpg" alt=""></span>
         </a>
