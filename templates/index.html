@@ -14,7 +14,7 @@
         border-collapse: collapse;
         padding: 3px;
     }
-    th, td { 
+    th, td, tr { 
         padding: 5px; 
     }
     div.container { w
@@ -89,6 +89,13 @@
         visibility: visible;
         top: 0px; left: 37px; 
     }
+    th {
+        border: 1px solid #c6c6c6;
+    }
+    .header_button:hover {
+        border: 1px solid #c6c6c6;
+        background-color: LightGray;
+    }
     </style>
   </head>
   <body style="background-color: #337ab7;">
@@ -98,15 +105,39 @@
         <p><textarea name="characters" placeholder="Enter Character Names" rows=10 cols=40></textarea>
         <p><input type = "Submit" value = "Submit" /><input type="reset" /></p>
       </form>
-      <table class="chars">
-        <thead><tr  class="header">
-          <th></th><th>Name</th><th>Age</th><th>Danger</th><th>Gang</th><th>Security</th><th>Kills</th><th>Losses</th>
-          <th></th><th>Corp</th><th>Alliance</th><th>Last Activity</th></tr>
-        </thead>
-        <tfoot><tr class="header">
-          <th></th><th>Name</th><th>Age</th><th>Danger</th><th>Gang</th><th>Security</th><th>Kills</th><th>Losses</th>
-          <th></th><th>Corp</th><th>Alliance</th><th>Last Activity</th></tr>
-        </tfoot>
+      <table id="chars" class="chars">
+          <thead>
+              <tr class="header">
+              <th></th>
+              <th class="header_button" onclick="sortTable(1)">Name</th>
+              <th>Age</th>
+              <th class="header_button" onclick="sortTable(3)">Danger</th>
+              <th class="header_button" onclick="sortTable(4)">Gang</th>
+              <th class="header_button" onclick="sortTable(5)">Security</th>
+              <th class="header_button" onclick="sortTable(6)">Kills</th>
+              <th class="header_button" onclick="sortTable(7)">Losses</th>
+              <th></th>
+              <th class="header_button" onclick="sortTable(9)">Corp</th>
+              <th class="header_button" onclick="sortTable(10)">Alliance</th>
+              <th>Last Activity</th>
+          </tr>
+          </thead>
+        <tfoot>
+              <tr class="header">
+              <th></th>
+              <th class="header_button" onclick="sortTable(1)">Name</th>
+              <th>Age</th>
+              <th class="header_button" onclick="sortTable(3)">Danger</th>
+              <th class="header_button" onclick="sortTable(4)">Gang</th>
+              <th class="header_button" onclick="sortTable(5)">Security</th>
+              <th class="header_button" onclick="sortTable(6)">Kills</th>
+              <th class="header_button" onclick="sortTable(7)">Losses</th>
+              <th></th>
+              <th class="header_button" onclick="sortTable(9)">Corp</th>
+              <th class="header_button" onclick="sortTable(10)">Alliance</th>
+              <th>Last Activity</th>
+          </tr>
+          </tfoot>
     {% set ns = namespace(use_background=false) %}
     {% for corp in charlist|groupby('corp_name') %}
     {% for char in corp.list %}
@@ -134,5 +165,62 @@
     {% endfor %}
       </table> 
     </div>
+<script>
+    function isNumeric(n) {
+        return !isNaN(parseFloat(n)) && isFinite(n);
+    }
+    function sortTable(n) {
+        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.getElementById("chars");
+        switching = true;
+        dir = "asc"; 
+        while (switching) {
+            switching = false;
+            rows = table.getElementsByTagName("TR");
+            for (i = 2; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                var value1 = x.innerText;
+                var value2 = y.innerText;
+                if (dir == "asc") {
+                    if (isNumeric(value1) && isNumeric(value2)) {
+                        if (Number(value1) > Number(value2)) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else {
+                        if (value1.toLowerCase() > value2.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                } else if (dir == "desc") {
+                    if (isNumeric(value1) && isNumeric(value2)) {
+                        if (Number(value1) < Number(value2)) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else {
+                        if (value1.toLowerCase() < value2.toLowerCase()) {
+                            shouldSwitch= true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount ++;      
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+    }
+</script>
   </body>
 </html>
