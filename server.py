@@ -9,10 +9,10 @@ from flask import Flask, render_template, request
 from datetime import date, datetime, timedelta
 import requests, json
 from functools import wraps
-from werkzeug.contrib.cache import SimpleCache
+from flask.ext.cache import Cache
 
 app = Flask(__name__)
-cache = SimpleCache()
+cache = Cache(app, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 60*60})
 
 def templated(template=None):
     def decorator(f):
@@ -30,21 +30,7 @@ def templated(template=None):
         return decorated_function
     return decorator
 
-def cached(timeout=60 * 60, key='ccp'):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            cache_key = '{0}:{1}'.format(key, args[0])
-            rv = cache.get(cache_key)
-            if rv is not None:
-                return rv
-            rv = f(*args, **kwargs)
-            cache.set(cache_key, rv, timeout=timeout)
-            return rv
-        return decorated_function
-    return decorator
-
-@cached()
+@cache.cached(key_prefix='name', timeout=24*60*60)
 def name2id(name):
     req = 'https://esi.tech.ccp.is/latest/search'
     payload = {'categories': 'character', 'datasource': 'tranquility', 'language': 'en-us', 'search': name, 'strict': 'false'}
@@ -53,20 +39,20 @@ def name2id(name):
     chars = d.get('character', [])
     return chars
 
-@cached()
+@cache.cached(key_prefix='ccp')
 def id2record(cid):
     req = 'https://esi.tech.ccp.is/latest/characters/{0}'.format(cid)
     payload = {'datasource': 'tranquility'}
     r = requests.get(req, params=payload)
     return json.loads(r.text)
 
-@cached(key='zkill')
+@cache.cached(key_prefix='zkill')
 def lookup_zkill_character(cid):
     req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(cid)
     r = requests.get(req)
     return json.loads(r.text)
 
-@cached(key='zkill')
+@cache.cached(key_prefix='zkill')
 def lookup_zkill_corp(cid):
     req = 'https://zkillboard.com/api/stats/corporationID/{0}/'.format(cid)
     r = requests.get(req)
@@ -76,7 +62,7 @@ def lookup_corp_danger(cid):
     rec = lookup_zkill_corp(cid)
     return rec.get('dangerRatio', 0)
 
-@cached()
+@cache.cached(key_prefix='corp')
 def lookup_corp(cid):
     req = 'https://esi.tech.ccp.is/latest/corporations/names/'
     payload = {'datasource': 'tranquility', 'corporation_ids': cid}
@@ -84,7 +70,7 @@ def lookup_corp(cid):
     d = json.loads(r.text)
     return d[0].get('corporation_name', '')
 
-@cached()
+@cache.cached(key_prefix='alliance')
 def lookup_alliance(aid):
     if aid == 0:
         return ''
@@ -119,7 +105,7 @@ def calculate_age(bday):
     td = today - birthdate
     return seconds_to_time_left_string(td.total_seconds())
 
-@cached(key='kill')
+@cache.cached(key_prefix='kill')
 def fetch_last_kill(cid):
     req = 'https://zkillboard.com/api/stats/characterID/{0}/limit/1/'.format(cid)
     r = requests.get(req)
@@ -140,7 +126,7 @@ def last_kill_activity(cid, has_killboard):
     else:
         return ''
 
-@cached(key='char')
+@cache.cached(key_prefix='char')
 def character_info(name):
     cids = name2id(name)
     cid = None
@@ -207,7 +193,7 @@ def local():
         names = name_list.splitlines()
     return dict(charlist=character_info_list(names))
 
-@app.route('/test1')
+@app.route('/test')
 @templated('index.html')
 def test1():
     names = ['Albina Sobr','Allex Hotomanila','Altern Torren','Anatar Thandon','Archiater','Art CooLSpoT',
@@ -215,12 +201,6 @@ def test1():
             'Darkschnyder','Davidkaa Smith','Dig Cos','Dimka Tallinn','Domenic Padre','Eudes Omaristos',
             'FESSA13','Fineas ElMaestro','Frack Taron','g0ldent0y','Gunner wortherspoon','gunofaugust',
             'Heior','Highshott','Irisfar Senpai','Jettero Prime','Jocelyn Rotineque']
-    return dict(charlist=character_info_list(names))
-
-@app.route('/test2')
-@templated('index.html')
-def test2():
-    names = ['Highshott','Portia Tigana']
     return dict(charlist=character_info_list(names))
 
 if __name__ == "__main__":
