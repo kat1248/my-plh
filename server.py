@@ -11,6 +11,7 @@ import requests, json
 from functools import wraps
 from flask_caching import Cache
 import logging
+import config
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter(
@@ -22,7 +23,9 @@ console.setFormatter(formatter)
 logger.addHandler(console)
 
 app = Flask(__name__)
-cache = Cache(app, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 60*60})
+app.config.from_object(config)
+
+cache = Cache(app, with_jinja2_ext=False, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 60*60})
 
 def templated(template=None):
     def decorator(f):
@@ -137,27 +140,33 @@ def last_kill_activity(cid, has_killboard):
         return ''
 
 @cache.memoize()
-def character_info(name):
-    cids = name2id(name)
-    cid = None
+def get_character_id(name):
+    character_ids = name2id(name)
+    character_id = None
     record = {}
-    if len(cids) == 0:
-        cid = None
-    elif len(cids) == 1:
-        cid = cids[0]
+    if len(character_ids) == 0:
+        character_id = None
+    elif len(character_ids) == 1:
+        character_id = character_ids[0]
     else:
-        for nid in cids:         
-            record = id2record(nid)
+        for next_id in character_ids:
+            record = id2record(next_id)
             if record['name'] == name:
-                cid = nid
+                character_id = next_id
                 break
-    if cid is None:
+    return character_id
+
+@cache.memoize()
+def character_info(name):
+    character_id = get_character_id(name)
+    if character_id is None:
         return None
-    record = id2record(cid)
+    record = id2record(character_id)
+
     char = {}
     char['name'] = name
-    char['cid'] = cid
-    zkill = lookup_zkill_character(cid)
+    char['character_id'] = character_id
+    zkill = lookup_zkill_character(character_id)
     char['danger'] = zkill.get('dangerRatio', 0)
     char['gang'] = zkill.get('gangRatio', 0)
     kills = zkill.get('shipsDestroyed', 0)
@@ -166,17 +175,14 @@ def character_info(name):
     char['losses'] = losses
     has_killboard = (kills != 0) or (losses != 0)
     char['has_killboard'] = has_killboard
-    char['last_kill'] = last_kill_activity(cid, has_killboard)
+    char['last_kill'] = last_kill_activity(character_id, has_killboard)
     corp_id = record.get('corporation_id', 0)
-    npc_corp = False
-    if corp_id < 2000000:
-        npc_corp = True
-    char['npc_corp'] = npc_corp
+    char['npc_corp'] = corp_id < 2000000
     char['corp_name'] = lookup_corp(corp_id)
     char['corp_id'] = corp_id
     char['corp_danger'] = lookup_corp_danger(corp_id)
-    aid = record.get('alliance_id', 0)
-    char['alliance'] = lookup_alliance(aid)
+    alliance_id = record.get('alliance_id', 0)
+    char['alliance_name'] = lookup_alliance(alliance_id)
     char['security'] = float('{0:1.2f}'.format(float(record.get('security_status', 0))))
     char['age'] = calculate_age(record['birthday'])
     return char

@@ -144,12 +144,12 @@
     {% for char in corp.list %}
     <tr class="{% if ns.use_background %}odd{% else %}even{% endif %}">
       <td>
-        <a class="{% if char.danger > 50 %}danger_{% endif %}thumb" href="https://image.eveonline.com/Character/{{ char.cid }}_512.jpg">
-        <img src="https://image.eveonline.com/Character/{{ char.cid }}_64.jpg" height="32" width="32">
-        <span><img src="https://image.eveonline.com/Character/{{ char.cid }}_512.jpg" alt=""></span>
+        <a class="{% if char.danger > 50 %}danger_{% endif %}thumb" href="https://image.eveonline.com/Character/{{ char.character_id }}_512.jpg">
+        <img src="https://image.eveonline.com/Character/{{ char.character_id }}_64.jpg" height="32" width="32">
+        <span><img src="https://image.eveonline.com/Character/{{ char.character_id }}_512.jpg" alt=""></span>
         </a>
       </td>
-      <td>{% if char.has_killboard %}<a href="https://zkillboard.com/character/{{ char.cid }}/">{{ char.name }}</a>{% else %}{{ char.name }} {% endif %}</td>
+      <td>{% if char.has_killboard %}<a href="https://zkillboard.com/character/{{ char.character_id }}/">{{ char.name }}</a>{% else %}{{ char.name }} {% endif %}</td>
       <td>{{ char.age }}</td>
       <td class="{% if char.danger > 50 %}danger_alert{% else %}data{% endif %}">{% if char.danger > 0 %}{{ char.danger }}{% endif %}</td>  
       <td class="data">{% if char.gang > 0 %}{{ char.gang }}{% endif %}</td>
@@ -158,7 +158,7 @@
       <td class="data">{{ char.losses }}</td>
       <td><img src="https://imageserver.eveonline.com/Corporation/{{ char.corp_id }}_64.png" height="32" width="32"></td>
       <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.npc_corp %} class="npc_corp"{% endif %} title="Corporation Danger: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/">{{ char.corp_name }}</a></td>
-      <td>{{ char.alliance }}</td>
+      <td>{{ char.alliance_name }}</td>
       <td>{{ char.last_kill }}</td>
     </tr>
     {% endfor %}
