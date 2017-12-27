@@ -87,14 +87,15 @@
     }
     .danger_thumb:hover span, .thumb:hover span { 
         visibility: visible;
-        top: 0px; left: 37px; 
+        top: 0px; left: 39px; 
     }
     th {
         border: 1px solid #c6c6c6;
     }
-    .header_button:hover {
+    th.header_button:hover {
         border: 1px solid #c6c6c6;
         background-color: LightGray;
+        cursor: pointer;
     }
     </style>
   </head>
@@ -156,7 +157,7 @@
       <td class="data">{{ char.kills }}</td>
       <td class="data">{{ char.losses }}</td>
       <td><img src="https://imageserver.eveonline.com/Corporation/{{ char.corp_id }}_64.png" height="32" width="32"></td>
-      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.npc_corp %} class="npc_corp"{% endif %} title="{{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/">{{ char.corp_name }}</a></td>
+      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.npc_corp %} class="npc_corp"{% endif %} title="Corporation Danger: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/">{{ char.corp_name }}</a></td>
       <td>{{ char.alliance }}</td>
       <td>{{ char.last_kill }}</td>
     </tr>

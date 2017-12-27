@@ -10,6 +10,16 @@ from datetime import date, datetime, timedelta
 import requests, json
 from functools import wraps
 from flask_caching import Cache
+import logging
+
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+console = logging.StreamHandler()
+console.setLevel(logging.DEBUG)
+console.setFormatter(formatter)
+logger.addHandler(console)
 
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 60*60})
