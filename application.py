@@ -174,6 +174,8 @@ def character_info(name):
     losses = zkill.get('shipsLost', 0)
     has_killboard = (kills != 0) or (losses != 0)
 
+    if name == 'Mynxee':
+        name = 'Space Mom'
     char_info = {
         'name': name, 
         'character_id': character_id,
