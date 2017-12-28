@@ -72,10 +72,10 @@
         vertical-align: bottom;
     }
     .thumb img { 
-        border: 3px solid #000;
+        border: 2px solid #000;
     }
     .danger_thumb img {
-        border: 3px solid Red;
+        border: 2px solid Red;
     }
     .danger_thumb:hover, .thumb:hover {
         border: 0; /* IE6 needs this to show large image */
@@ -157,7 +157,7 @@
       <td class="data">{{ char.kills }}</td>
       <td class="data">{{ char.losses }}</td>
       <td><img src="https://imageserver.eveonline.com/Corporation/{{ char.corp_id }}_64.png" height="32" width="32"></td>
-      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.npc_corp %} class="npc_corp"{% endif %} title="Corporation Danger: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/">{{ char.corp_name }}</a></td>
+      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.is_npc_corp %} class="npc_corp"{% endif %} title="Corporation Danger: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/">{{ char.corp_name }}</a></td>
       <td>{{ char.alliance_name }}</td>
       <td>{{ char.last_kill }}</td>
     </tr>

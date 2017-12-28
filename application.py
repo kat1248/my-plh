@@ -22,10 +22,10 @@ console.setLevel(logging.DEBUG)
 console.setFormatter(formatter)
 logger.addHandler(console)
 
-app = Flask(__name__)
-app.config.from_object(config)
+application = Flask(__name__)
+application.config.from_object(config)
 
-cache = Cache(app, with_jinja2_ext=False, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 60*60})
+cache = Cache(application, with_jinja2_ext=False, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 60*60})
 
 def templated(template=None):
     def decorator(f):
@@ -43,6 +43,7 @@ def templated(template=None):
         return decorated_function
     return decorator
 
+# CCP ESI Api calls
 @cache.memoize(timeout=24*60*60)
 def name2id(name):
     req = 'https://esi.tech.ccp.is/latest/search'
@@ -58,22 +59,6 @@ def id2record(cid):
     payload = {'datasource': 'tranquility'}
     r = requests.get(req, params=payload)
     return json.loads(r.text)
-
-@cache.memoize()
-def lookup_zkill_character(cid):
-    req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(cid)
-    r = requests.get(req)
-    return json.loads(r.text)
-
-@cache.memoize()
-def lookup_zkill_corp(cid):
-    req = 'https://zkillboard.com/api/stats/corporationID/{0}/'.format(cid)
-    r = requests.get(req)
-    return json.loads(r.text)
-
-def lookup_corp_danger(cid):
-    rec = lookup_zkill_corp(cid)
-    return rec.get('dangerRatio', 0)
 
 @cache.memoize()
 def lookup_corp(cid):
@@ -92,7 +77,46 @@ def lookup_alliance(aid):
     r = requests.get(req, params=payload)
     d = json.loads(r.text)
     return d[0].get('alliance_name', '')
-    
+
+# ZKillboard Api calls
+@cache.memoize()
+def lookup_zkill_character(cid):
+    req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(cid)
+    r = requests.get(req)
+    return json.loads(r.text)
+
+@cache.memoize()
+def lookup_zkill_corp(cid):
+    req = 'https://zkillboard.com/api/stats/corporationID/{0}/'.format(cid)
+    r = requests.get(req)
+    return json.loads(r.text)
+
+def lookup_corp_danger(cid):
+    rec = lookup_zkill_corp(cid)
+    return rec.get('dangerRatio', 0)
+
+@cache.memoize()
+def fetch_last_kill(cid):
+    req = 'https://zkillboard.com/api/stats/characterID/{0}/limit/1/'.format(cid)
+    r = requests.get(req)
+    d = json.loads(r.text)[0]
+    when = d['killmail_time'].split("T")[0]
+    victim = d['victim']
+    who = victim.get('character_id', 0)
+    return (when, who)
+
+def last_kill_activity(cid, has_killboard):
+    if has_killboard:
+        when, who = fetch_last_kill(cid)
+        if who == cid:
+            return 'died {0}'.format(when)
+        elif who == 0:
+            return 'struct {0}'.format(when)
+        else:
+            return 'kill {0}'.format(when)
+    else:
+        return ''
+
 def seconds_to_time_left_string(total_seconds):
     s = int(total_seconds)
     years = s // 31104000
@@ -119,27 +143,6 @@ def calculate_age(bday):
     return seconds_to_time_left_string(td.total_seconds())
 
 @cache.memoize()
-def fetch_last_kill(cid):
-    req = 'https://zkillboard.com/api/stats/characterID/{0}/limit/1/'.format(cid)
-    r = requests.get(req)
-    d = json.loads(r.text)[0]
-    victim = d['victim']
-    who = victim.get('character_id', 0)
-    return (d['killmail_time'].split("T")[0], who)
-
-def last_kill_activity(cid, has_killboard):
-    if has_killboard:
-        when, who = fetch_last_kill(cid)
-        if who == cid:
-            return 'died {0}'.format(when)
-        elif who == 0:
-            return 'struct {0}'.format(when)
-        else:
-            return 'kill {0}'.format(when)
-    else:
-        return ''
-
-@cache.memoize()
 def get_character_id(name):
     character_ids = name2id(name)
     character_id = None
@@ -161,31 +164,34 @@ def character_info(name):
     character_id = get_character_id(name)
     if character_id is None:
         return None
-    record = id2record(character_id)
 
-    char = {}
-    char['name'] = name
-    char['character_id'] = character_id
-    zkill = lookup_zkill_character(character_id)
-    char['danger'] = zkill.get('dangerRatio', 0)
-    char['gang'] = zkill.get('gangRatio', 0)
-    kills = zkill.get('shipsDestroyed', 0)
-    char['kills'] = kills
-    losses = zkill.get('shipsLost', 0)
-    char['losses'] = losses
-    has_killboard = (kills != 0) or (losses != 0)
-    char['has_killboard'] = has_killboard
-    char['last_kill'] = last_kill_activity(character_id, has_killboard)
+    record = id2record(character_id)
     corp_id = record.get('corporation_id', 0)
-    char['npc_corp'] = corp_id < 2000000
-    char['corp_name'] = lookup_corp(corp_id)
-    char['corp_id'] = corp_id
-    char['corp_danger'] = lookup_corp_danger(corp_id)
     alliance_id = record.get('alliance_id', 0)
-    char['alliance_name'] = lookup_alliance(alliance_id)
-    char['security'] = float('{0:1.2f}'.format(float(record.get('security_status', 0))))
-    char['age'] = calculate_age(record['birthday'])
-    return char
+
+    zkill = lookup_zkill_character(character_id)
+    kills = zkill.get('shipsDestroyed', 0)
+    losses = zkill.get('shipsLost', 0)
+    has_killboard = (kills != 0) or (losses != 0)
+
+    char_info = {
+        'name': name, 
+        'character_id': character_id,
+        'security': float('{0:1.2f}'.format(float(record.get('security_status', 0)))),
+        'age': calculate_age(record['birthday']), 
+        'danger': zkill.get('dangerRatio', 0),
+        'gang': zkill.get('gangRatio', 0), 
+        'kills': kills, 
+        'losses': losses,
+        'has_killboard': has_killboard, 
+        'last_kill': last_kill_activity(character_id, has_killboard),
+        'corp_name': lookup_corp(corp_id), 
+        'corp_id': corp_id,
+        'is_npc_corp': corp_id < 2000000, 
+        'corp_danger': lookup_corp_danger(corp_id), 
+        'alliance_name': lookup_alliance(alliance_id)
+    }
+    return char_info
 
 def character_info_list(names):
     charlist = []
@@ -195,12 +201,12 @@ def character_info_list(names):
             charlist.append(info)
     return charlist
 
-@app.route('/')
+@application.route('/')
 @templated('index.html')
 def lookup():
     return dict(charlist=[])
 
-@app.route('/local', methods = ['POST', 'GET'])
+@application.route('/local', methods = ['POST', 'GET'])
 @templated('index.html')
 def local():
     names=[]
@@ -209,16 +215,17 @@ def local():
         names = name_list.splitlines()
     return dict(charlist=character_info_list(names))
 
-@app.route('/test')
+@application.route('/test')
 @templated('index.html')
 def test1():
-    names = ['Albina Sobr','Allex Hotomanila','Altern Torren','Anatar Thandon','Archiater','Art CooLSpoT',
-            'Azarkhy Alfik Thiesant','Bitter Dystany','Cartelus','Chilik','Connor McCloud McMahon','Dak Ad',
-            'Darkschnyder','Davidkaa Smith','Dig Cos','Dimka Tallinn','Domenic Padre','Eudes Omaristos',
-            'FESSA13','Fineas ElMaestro','Frack Taron','g0ldent0y','Gunner wortherspoon','gunofaugust',
-            'Heior','Highshott','Irisfar Senpai','Jettero Prime','Jocelyn Rotineque']
+    names = [
+        'Albina Sobr','Allex Hotomanila','Altern Torren','Anatar Thandon','Archiater','Art CooLSpoT',
+        'Azarkhy Alfik Thiesant','Bitter Dystany','Cartelus','Chilik','Connor McCloud McMahon','Dak Ad',
+        'Darkschnyder','Davidkaa Smith','Dig Cos','Dimka Tallinn','Domenic Padre','Eudes Omaristos',
+        'FESSA13','Fineas ElMaestro','Frack Taron','g0ldent0y','Gunner wortherspoon','gunofaugust',
+        'Heior','Highshott','Irisfar Senpai','Jettero Prime','Jocelyn Rotineque'
+    ]
     return dict(charlist=character_info_list(names))
 
 if __name__ == "__main__":
-#    app.run(host="10.60.42.51",debug=True)
-    app.run(debug=True)
+    application.run(debug=True)
