@@ -27,6 +27,10 @@ application.config.from_object(config)
 
 cache = Cache(application, with_jinja2_ext=False, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 60*60})
 
+request_headers = {
+    'user-agent': 'kat1248@gmail.com Signal Cartel Little Helper'
+}
+
 # map of name to nickname, easter egg
 nicknames = {
     'Mynxee': 'Space Mom',
@@ -57,57 +61,61 @@ def templated(template=None):
 def name2id(name):
     req = 'https://esi.tech.ccp.is/latest/search'
     payload = {'categories': 'character', 'datasource': 'tranquility', 'language': 'en-us', 'search': name, 'strict': 'false'}
-    r = requests.get(req, params=payload)
+    r = requests.get(req, params=payload, headers=request_headers)
     d = json.loads(r.text)
     chars = d.get('character', [])
     return chars
 
 @cache.memoize()
-def id2record(cid):
-    req = 'https://esi.tech.ccp.is/latest/characters/{0}'.format(cid)
+def id2record(character_id):
+    req = 'https://esi.tech.ccp.is/latest/characters/{0}'.format(character_id)
     payload = {'datasource': 'tranquility'}
-    r = requests.get(req, params=payload)
+    r = requests.get(req, params=payload, headers=request_headers)
     return json.loads(r.text)
 
 @cache.memoize()
-def lookup_corp(cid):
+def lookup_corp(corporation_id):
     req = 'https://esi.tech.ccp.is/latest/corporations/names/'
-    payload = {'datasource': 'tranquility', 'corporation_ids': cid}
-    r = requests.get(req, params=payload)
+    payload = {'datasource': 'tranquility', 'corporation_ids': corporation_id}
+    r = requests.get(req, params=payload, headers=request_headers)
     d = json.loads(r.text)
     return d[0].get('corporation_name', '')
 
 @cache.memoize()
-def lookup_alliance(aid):
-    if aid == 0:
+def lookup_corp_startdate(character_id):
+    req = 'https://esi.tech.ccp.is/latest/characters/{0}/corporationhistory'.format(character_id)
+    r = requests.get(req, headers=request_headers)
+    d = json.loads(r.text)
+    return d[0].get('start_date', '')
+
+@cache.memoize()
+def lookup_alliance(alliance_id):
+    if alliance_id == 0:
         return ''
     req = 'https://esi.tech.ccp.is/latest/alliances/names/'
-    payload = {'datasource': 'tranquility', 'alliance_ids': aid}
-    r = requests.get(req, params=payload)
+    payload = {'datasource': 'tranquility', 'alliance_ids': alliance_id}
+    r = requests.get(req, params=payload, headers=request_headers)
     d = json.loads(r.text)
     return d[0].get('alliance_name', '')
 
 # ZKillboard Api calls
 @cache.memoize()
-def lookup_zkill_character(cid):
-    req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(cid)
-    r = requests.get(req)
+def lookup_zkill_character(character_id):
+    req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(character_id)
+    r = requests.get(req, headers=request_headers)
     return json.loads(r.text)
 
 @cache.memoize()
-def lookup_zkill_corp(cid):
-    req = 'https://zkillboard.com/api/stats/corporationID/{0}/'.format(cid)
-    r = requests.get(req)
-    return json.loads(r.text)
-
-def lookup_corp_danger(cid):
-    rec = lookup_zkill_corp(cid)
-    return rec.get('dangerRatio', 0)
+def lookup_corp_danger(corporation_id):
+    req = 'https://zkillboard.com/api/stats/corporationID/{0}/'.format(corporation_id)
+    r = requests.get(req, headers=request_headers)
+    d = json.loads(r.text)
+    return d.get('dangerRatio', 0)
 
 @cache.memoize()
 def fetch_last_kill(cid):
     req = 'https://zkillboard.com/api/stats/characterID/{0}/limit/1/'.format(cid)
-    r = requests.get(req)
+    r = requests.get(req, headers=request_headers)
     d = json.loads(r.text)[0]
     when = d['killmail_time'].split("T")[0]
     victim = d['victim']
@@ -126,7 +134,7 @@ def last_kill_activity(cid, has_killboard):
     else:
         return ''
 
-def seconds_to_time_left_string(total_seconds):
+def seconds2time(total_seconds):
     s = int(total_seconds)
     years = s // 31104000
     s = s - (years * 31104000)
@@ -145,11 +153,15 @@ def seconds_to_time_left_string(total_seconds):
     else:
         return fmt.format(days,months,years)
 
-def calculate_age(bday):
+def seconds2days(total_seconds):
+    s = int(total_seconds)
+    return s // 86400
+
+def age2seconds(a_date):
     today = datetime.today()
-    birthdate = datetime.strptime(bday, "%Y-%m-%dT%H:%M:%SZ")
+    birthdate = datetime.strptime(a_date, "%Y-%m-%dT%H:%M:%SZ")
     td = today - birthdate
-    return seconds_to_time_left_string(td.total_seconds())
+    return td.total_seconds()
 
 @cache.memoize()
 def get_character_id(name):
@@ -182,13 +194,15 @@ def character_info(name):
     kills = zkill.get('shipsDestroyed', 0)
     losses = zkill.get('shipsLost', 0)
     has_killboard = (kills != 0) or (losses != 0)
+
     if name in nicknames:
         name = nicknames[name]
+
     char_info = {
         'name': name, 
         'character_id': character_id,
         'security': float('{0:1.2f}'.format(float(record.get('security_status', 0)))),
-        'age': calculate_age(record['birthday']), 
+        'age': seconds2time(age2seconds(record['birthday'])), 
         'danger': zkill.get('dangerRatio', 0),
         'gang': zkill.get('gangRatio', 0), 
         'kills': kills, 
@@ -197,6 +211,7 @@ def character_info(name):
         'last_kill': last_kill_activity(character_id, has_killboard),
         'corp_name': lookup_corp(corp_id), 
         'corp_id': corp_id,
+        'corp_age': seconds2days(age2seconds(lookup_corp_startdate(character_id))),
         'is_npc_corp': corp_id < 2000000, 
         'corp_danger': lookup_corp_danger(corp_id), 
         'alliance_name': lookup_alliance(alliance_id)
