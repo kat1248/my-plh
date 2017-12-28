@@ -27,6 +27,15 @@ application.config.from_object(config)
 
 cache = Cache(application, with_jinja2_ext=False, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 60*60})
 
+# map of name to nickname, easter egg
+nicknames = {
+    'Mynxee': 'Space Mom',
+    'Portia Tigana': 'Tiggs'
+}
+
+# maximum number of characters to fetch (for speed)
+max_chars = 30
+
 def templated(template=None):
     def decorator(f):
         @wraps(f)
@@ -173,9 +182,8 @@ def character_info(name):
     kills = zkill.get('shipsDestroyed', 0)
     losses = zkill.get('shipsLost', 0)
     has_killboard = (kills != 0) or (losses != 0)
-
-    if name == 'Mynxee':
-        name = 'Space Mom'
+    if name in nicknames:
+        name = nicknames[name]
     char_info = {
         'name': name, 
         'character_id': character_id,
@@ -206,7 +214,7 @@ def character_info_list(names):
 @application.route('/')
 @templated('index.html')
 def lookup():
-    return dict(charlist=[])
+    return dict(charlist=[], max_chars=max_chars)
 
 @application.route('/local', methods = ['POST', 'GET'])
 @templated('index.html')
@@ -214,8 +222,8 @@ def local():
     names=[]
     if request.method == 'POST':
         name_list = request.form['characters']
-        names = name_list.splitlines()
-    return dict(charlist=character_info_list(names))
+        names = name_list.splitlines()[:max_chars]
+    return dict(charlist=character_info_list(names), max_chars=max_chars)
 
 @application.route('/test')
 @templated('index.html')
@@ -227,7 +235,7 @@ def test1():
         'FESSA13','Fineas ElMaestro','Frack Taron','g0ldent0y','Gunner wortherspoon','gunofaugust',
         'Heior','Highshott','Irisfar Senpai','Jettero Prime','Jocelyn Rotineque'
     ]
-    return dict(charlist=character_info_list(names))
+    return dict(charlist=character_info_list(names), max_chars=max_chars)
 
 if __name__ == "__main__":
     application.run(debug=True)

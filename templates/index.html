@@ -103,7 +103,7 @@
     <H1 style="text-align: center; color: White;">Signal Cartel's Little Helper</H1>
     <div class="container">
       <form action = "{{ url_for('local') }}" method = "POST">
-        <p><textarea name="characters" placeholder="Enter Character Names" rows=10 cols=40></textarea>
+        <p><textarea name="characters" placeholder="Enter Character Names (maximum {{ max_chars }})" rows=10 cols=40></textarea>
         <p><input type = "Submit" value = "Submit" /><input type="reset" /></p>
       </form>
       <table id="chars" class="chars">
