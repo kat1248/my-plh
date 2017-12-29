@@ -73,7 +73,7 @@ def id2record(character_id):
     r = requests.get(req, params=payload, headers=request_headers)
     return json.loads(r.text)
 
-@cache.memoize()
+@cache.memoize(timeout=24*60*60)
 def lookup_corp(corporation_id):
     req = 'https://esi.tech.ccp.is/latest/corporations/names/'
     payload = {'datasource': 'tranquility', 'corporation_ids': corporation_id}
@@ -88,7 +88,7 @@ def lookup_corp_startdate(character_id):
     d = json.loads(r.text)
     return d[0].get('start_date', '')
 
-@cache.memoize()
+@cache.memoize(timeout=24*60*60)
 def lookup_alliance(alliance_id):
     if alliance_id == 0:
         return ''
