@@ -38,7 +38,7 @@ nicknames = {
 }
 
 # maximum number of characters to fetch (for speed)
-max_chars = 30
+max_chars = config.MAX_CHARS
 
 def templated(template=None):
     def decorator(f):
@@ -253,4 +253,4 @@ def test1():
     return dict(charlist=character_info_list(names), max_chars=max_chars)
 
 if __name__ == "__main__":
-    application.run(debug=True)
+    application.run(port=config.PORT, host=config.HOST, debug=config.DEBUG)
