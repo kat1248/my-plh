@@ -1,0 +1,109 @@
+    @font-face {
+        font-family: static;
+        src: url('static.woff');
+    }
+    @font-face {
+        font-family: static;
+        font-weight: bold;
+        src: url('staticbold.woff');
+    }
+    @font-face {
+        font-family: static;
+        font-weight: italic;
+        src: url('staticitalic.woff');
+    }
+    body {
+        font-family: static;
+        font-size: 14px; 
+        background-color: #000; 
+    }
+    table {
+        border: 2px solid Black;
+        background-color: rgba(51, 122, 183, 0.5);
+        border-collapse: collapse;
+        padding: 3px;
+    }
+    th, td, tr { 
+        padding: 5px; 
+    }
+    div.container { w
+        idth: 100%; 
+    }
+    form {
+        border: 2px solid Black;
+        padding: 5px;
+        margin-right: 5px;
+        border-radius: 5px;
+        float: left;
+    }
+    td img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0px;
+    }
+    tr.header {
+        background-color: White;
+    }
+    tr.odd:hover, tr.even:hover {
+        background-color: Silver;
+    }
+    .clearfix { 
+        overflow: auto; 
+    }
+    td.danger_alert, td.corp_alert { 
+        border: 3px solid Red;
+        border-style: groove;
+    }
+    td.npc_corp { 
+        border: 3px solid Green;
+        border-style: groove;
+    }
+    tr.odd { 
+        background-color: GainsBoro;
+    }
+    tr.even { 
+        background-color: WhiteSmoke;
+    }
+    tr.even, tr.odd { 
+        border: 1px solid #c6c6c6; 
+    }
+    td.danger_alert, td.data {
+        text-align: center; 
+    }
+    .danger_thumb, .thumb {
+        float: left; /* must be floated for same cross browser position of larger image */
+        position: relative;
+        margin: 3px;
+    }
+    .thumb img, .danger_thumb img { 
+        border-style: groove;
+        vertical-align: bottom;
+    }
+    .thumb img { 
+        border: 2px solid #000;
+    }
+    .danger_thumb img {
+        border: 2px solid Red;
+    }
+    .danger_thumb:hover, .thumb:hover {
+        border: 0; /* IE6 needs this to show large image */
+        z-index: 1;
+    }
+    .danger_thumb span, .thumb span { 
+        position: absolute;
+        visibility: hidden;
+    }
+    .danger_thumb:hover span, .thumb:hover span { 
+        visibility: visible;
+        top: 5px; left: 43px; 
+    }
+    th {
+        font-style: bold;
+        border: 1px solid #c6c6c6;
+    }
+    th.header_button:hover {
+        border: 1px solid #c6c6c6;
+        background-color: LightGray;
+        cursor: pointer;
+    }

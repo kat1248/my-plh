@@ -5,7 +5,7 @@
 # plh = https://github.com/rischwa/eve-plh
 # my id = 92942102
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from datetime import date, datetime, timedelta, tzinfo
 import pytz
 import requests, json
@@ -104,7 +104,7 @@ def id2record(character_id):
 def lookup_corp(corporation_id):
     op = esiapp.op['get_corporations_names'](
         corporation_ids=[corporation_id],
-        datasource=config.ESI_DATASOURCE, 
+        datasource=config.ESI_DATASOURCE
     )
     response = esiclient.request(op)
     return response.data[0].get('corporation_name', '')
@@ -125,7 +125,7 @@ def lookup_alliance(alliance_id):
         return ''
     op = esiapp.op['get_alliances_names'](
         alliance_ids=[alliance_id],
-        datasource=config.ESI_DATASOURCE, 
+        datasource=config.ESI_DATASOURCE
     )
     response = esiclient.request(op)
     return response.data[0].get('alliance_name', '')
@@ -282,6 +282,10 @@ def test1():
         'Heior','Highshott','Irisfar Senpai','Jettero Prime','Jocelyn Rotineque'
     ]
     return dict(charlist=character_info_list(names), max_chars=max_chars)
+
+@application.route('/favicon.ico')
+def icon():
+    return redirect(url_for('static', filename='favicon.ico'), code=302)
 
 if __name__ == "__main__":
     application.run(port=config.PORT, host=config.HOST, debug=config.DEBUG)
