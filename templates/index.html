@@ -112,8 +112,8 @@
               <th></th>
               <th class="header_button" onclick="sortTable(1)">Name</th>
               <th>Age</th>
-              <th class="header_button" onclick="sortTable(3)">Danger</th>
-              <th class="header_button" onclick="sortTable(4)">Gang</th>
+              <th class="header_button" onclick="sortTable(3)">Danger Level</th>
+              <th class="header_button" onclick="sortTable(4)">Gang %</th>
               <th class="header_button" onclick="sortTable(5)">Security</th>
               <th class="header_button" onclick="sortTable(6)">Kills</th>
               <th class="header_button" onclick="sortTable(7)">Losses</th>
@@ -129,8 +129,8 @@
               <th></th>
               <th class="header_button" onclick="sortTable(1)">Name</th>
               <th>Age</th>
-              <th class="header_button" onclick="sortTable(3)">Danger</th>
-              <th class="header_button" onclick="sortTable(4)">Gang</th>
+              <th class="header_button" onclick="sortTable(3)">Danger Level</th>
+              <th class="header_button" onclick="sortTable(4)">Gang %</th>
               <th class="header_button" onclick="sortTable(5)">Security</th>
               <th class="header_button" onclick="sortTable(6)">Kills</th>
               <th class="header_button" onclick="sortTable(7)">Losses</th>
@@ -157,7 +157,7 @@
       <td class="data">{{ char.kills }}</td>
       <td class="data">{{ char.losses }}</td>
       <td><img src="https://imageserver.eveonline.com/Corporation/{{ char.corp_id }}_64.png" height="32" width="32"></td>
-      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.is_npc_corp %} class="npc_corp"{% endif %} title="Corporation Danger: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank">{{ char.corp_name }}</a></td>
+      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.is_npc_corp %} class="npc_corp"{% endif %} title="Corporation Danger Level: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank">{{ char.corp_name }}</a></td>
       <td>{{ char.alliance_name }}</td>
       <td>{{ char.last_kill }}</td>
       <td>{{ char.corp_age }} days</td>

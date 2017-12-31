@@ -6,12 +6,15 @@
 # my id = 92942102
 
 from flask import Flask, render_template, request
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, tzinfo
+import pytz
 import requests, json
 from functools import wraps
 from flask_caching import Cache
 import logging
 import config
+from esipy import App
+from esipy import EsiClient
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter(
@@ -27,7 +30,7 @@ application.config.from_object(config)
 
 cache = Cache(application, with_jinja2_ext=False, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 60*60})
 
-request_headers = {
+zkill_request_headers = {
     'user-agent': 'kat1248@gmail.com Signal Cartel Little Helper'
 }
 
@@ -39,6 +42,24 @@ nicknames = {
 
 # maximum number of characters to fetch (for speed)
 max_chars = config.MAX_CHARS
+
+# create the app
+esiapp = App.create(config.ESI_SWAGGER_JSON)
+
+# init the security object
+# esisecurity = EsiSecurity(
+#     app=esiapp,
+#     redirect_uri=config.ESI_CALLBACK,
+#     client_id=config.ESI_CLIENT_ID,
+#     secret_key=config.ESI_SECRET_KEY,
+# )
+
+# init the client
+esiclient = EsiClient(
+    security=None,
+    cache=None,
+    headers={'User-Agent': config.ESI_USER_AGENT}
+)
 
 def templated(template=None):
     def decorator(f):
@@ -59,63 +80,74 @@ def templated(template=None):
 # CCP ESI Api calls
 @cache.memoize(timeout=24*60*60)
 def name2id(name):
-    req = 'https://esi.tech.ccp.is/latest/search'
-    payload = {'categories': 'character', 'datasource': 'tranquility', 'language': 'en-us', 'search': name, 'strict': 'false'}
-    r = requests.get(req, params=payload, headers=request_headers)
-    d = json.loads(r.text)
-    chars = d.get('character', [])
+    op = esiapp.op['get_search'](
+        categories='character', 
+        datasource=config.ESI_DATASOURCE, 
+        language='en-us', 
+        search=name, 
+        strict=False
+    )
+    response = esiclient.request(op)
+    chars = response.data.get('character', [])
     return chars
 
 @cache.memoize()
 def id2record(character_id):
-    req = 'https://esi.tech.ccp.is/latest/characters/{0}'.format(character_id)
-    payload = {'datasource': 'tranquility'}
-    r = requests.get(req, params=payload, headers=request_headers)
-    return json.loads(r.text)
+    op = esiapp.op['get_characters_character_id'](
+        character_id=character_id, 
+        datasource=config.ESI_DATASOURCE
+    )
+    response = esiclient.request(op)
+    return response.data
 
 @cache.memoize(timeout=24*60*60)
 def lookup_corp(corporation_id):
-    req = 'https://esi.tech.ccp.is/latest/corporations/names/'
-    payload = {'datasource': 'tranquility', 'corporation_ids': corporation_id}
-    r = requests.get(req, params=payload, headers=request_headers)
-    d = json.loads(r.text)
-    return d[0].get('corporation_name', '')
+    op = esiapp.op['get_corporations_names'](
+        corporation_ids=[corporation_id],
+        datasource=config.ESI_DATASOURCE, 
+    )
+    response = esiclient.request(op)
+    return response.data[0].get('corporation_name', '')
 
 @cache.memoize()
 def lookup_corp_startdate(character_id):
-    req = 'https://esi.tech.ccp.is/latest/characters/{0}/corporationhistory'.format(character_id)
-    r = requests.get(req, headers=request_headers)
-    d = json.loads(r.text)
-    return d[0].get('start_date', '')
+    op = esiapp.op['get_characters_character_id_corporationhistory'](
+        character_id=character_id, 
+        datasource=config.ESI_DATASOURCE
+    )
+    response = esiclient.request(op)
+    data = json.loads(response.raw)
+    return response.data[0].get('start_date', '')
 
 @cache.memoize(timeout=24*60*60)
 def lookup_alliance(alliance_id):
     if alliance_id == 0:
         return ''
-    req = 'https://esi.tech.ccp.is/latest/alliances/names/'
-    payload = {'datasource': 'tranquility', 'alliance_ids': alliance_id}
-    r = requests.get(req, params=payload, headers=request_headers)
-    d = json.loads(r.text)
-    return d[0].get('alliance_name', '')
+    op = esiapp.op['get_alliances_names'](
+        alliance_ids=[alliance_id],
+        datasource=config.ESI_DATASOURCE, 
+    )
+    response = esiclient.request(op)
+    return response.data[0].get('alliance_name', '')
 
 # ZKillboard Api calls
 @cache.memoize()
 def lookup_zkill_character(character_id):
     req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(character_id)
-    r = requests.get(req, headers=request_headers)
+    r = requests.get(req, headers=zkill_request_headers)
     return json.loads(r.text)
 
 @cache.memoize()
 def lookup_corp_danger(corporation_id):
     req = 'https://zkillboard.com/api/stats/corporationID/{0}/'.format(corporation_id)
-    r = requests.get(req, headers=request_headers)
+    r = requests.get(req, headers=zkill_request_headers)
     d = json.loads(r.text)
     return d.get('dangerRatio', 0)
 
 @cache.memoize()
 def fetch_last_kill(cid):
     req = 'https://zkillboard.com/api/stats/characterID/{0}/limit/1/'.format(cid)
-    r = requests.get(req, headers=request_headers)
+    r = requests.get(req, headers=zkill_request_headers)
     d = json.loads(r.text)[0]
     when = d['killmail_time'].split("T")[0]
     victim = d['victim']
@@ -158,9 +190,8 @@ def seconds2days(total_seconds):
     return s // 86400
 
 def age2seconds(a_date):
-    today = datetime.today()
-    birthdate = datetime.strptime(a_date, "%Y-%m-%dT%H:%M:%SZ")
-    td = today - birthdate
+    today = datetime.now(tz=pytz.utc)
+    td = today - a_date.v
     return td.total_seconds()
 
 @cache.memoize()
