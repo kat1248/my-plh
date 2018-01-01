@@ -78,26 +78,32 @@ def templated(template=None):
     return decorator
 
 # CCP ESI Api calls
-@cache.memoize(timeout=24*60*60)
-def name2id(name):
+def name2id_op(name):
     op = esiapp.op['get_search'](
         categories='character', 
         datasource=config.ESI_DATASOURCE, 
         language='en-us', 
         search=name, 
-        strict=False
+        strict=True
     )
-    response = esiclient.request(op)
+    return op
+
+@cache.memoize(timeout=24*60*60)
+def name2id(name):
+    response = esiclient.request(name2id_op(name))
     chars = response.data.get('character', [])
     return chars
 
-@cache.memoize()
-def id2record(character_id):
+def id2record_op(character_id):
     op = esiapp.op['get_characters_character_id'](
         character_id=character_id, 
         datasource=config.ESI_DATASOURCE
     )
-    response = esiclient.request(op)
+    return op
+
+@cache.memoize()
+def id2record(character_id):
+    response = esiclient.request(id2record_op(character_id))
     return response.data
 
 @cache.memoize(timeout=24*60*60)
@@ -134,6 +140,13 @@ def lookup_alliance(alliance_id):
 @cache.memoize()
 def lookup_zkill_character(character_id):
     req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(character_id)
+    r = requests.get(req, headers=zkill_request_headers)
+    return json.loads(r.text)
+
+@cache.memoize()
+def lookup_zkill_characters(character_ids):
+    character_id_list = ','.join(str(x) for x in sorted(character_ids))
+    req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(character_id_list)
     r = requests.get(req, headers=zkill_request_headers)
     return json.loads(r.text)
 
@@ -195,8 +208,7 @@ def age2seconds(a_date):
     return td.total_seconds()
 
 @cache.memoize()
-def get_character_id(name):
-    character_ids = name2id(name)
+def get_character_id(name, character_ids):
     character_id = None
     record = {}
     if len(character_ids) == 0:
@@ -204,38 +216,34 @@ def get_character_id(name):
     elif len(character_ids) == 1:
         character_id = character_ids[0]
     else:
-        for next_id in character_ids:
-            record = id2record(next_id)
-            if record['name'] == name:
-                character_id = next_id
+        print 'multi character id'
+        records = get_ccp_records(character_ids)
+        for record in records:
+            data = record[1]
+            if data['name'] == name:
+                character_id = record[0]
                 break
     return character_id
 
 @cache.memoize()
-def character_info(name):
-    character_id = get_character_id(name)
-    if character_id is None:
-        return None
-
-    record = id2record(character_id)
-    corp_id = record.get('corporation_id', 0)
-    alliance_id = record.get('alliance_id', 0)
-
-    zkill = lookup_zkill_character(character_id)
-    kills = zkill.get('shipsDestroyed', 0)
-    losses = zkill.get('shipsLost', 0)
-    has_killboard = (kills != 0) or (losses != 0)
-
+def record2info(character_id, ccp_info, zkill_info):
+    name = ccp_info.get('name', '')
     if name in nicknames:
         name = nicknames[name]
+    corp_id = ccp_info.get('corporation_id', 0)
+    alliance_id = ccp_info.get('alliance_id', 0)
+
+    kills = zkill_info.get('shipsDestroyed', 0)
+    losses = zkill_info.get('shipsLost', 0)
+    has_killboard = (kills != 0) or (losses != 0)
 
     char_info = {
         'name': name, 
         'character_id': character_id,
-        'security': float('{0:1.2f}'.format(float(record.get('security_status', 0)))),
-        'age': seconds2time(age2seconds(record['birthday'])), 
-        'danger': zkill.get('dangerRatio', 0),
-        'gang': zkill.get('gangRatio', 0), 
+        'security': float('{0:1.2f}'.format(float(ccp_info.get('security_status', 0)))),
+        'age': seconds2time(age2seconds(ccp_info['birthday'])), 
+        'danger': zkill_info.get('dangerRatio', 0),
+        'gang': zkill_info.get('gangRatio', 0), 
         'kills': kills, 
         'losses': losses,
         'has_killboard': has_killboard, 
@@ -249,12 +257,39 @@ def character_info(name):
     }
     return char_info
 
-def character_info_list(names):
-    charlist = []
+def get_ccp_records(id_list):
+    records = []
+    operations = []
+    ids = []
+    for id in id_list:
+        rv = cache.get(id)
+        if rv is None:
+            ids.append(id)
+            operations.append(id2record_op(id))
+        else:
+            records.append((id, rv))
+    if len(operations) > 0:
+        results = esiclient.multi_request(operations)
+        for idx, res in enumerate(results):
+            data = res[1].data
+            records.append((ids[idx], data))
+            cache.set(id, data, timeout=60*60)
+    return records
+
+def multi_character_info_list(names):
+    operations = []
     for name in names:
-        info = character_info(name)
-        if info is not None:
-            charlist.append(info)
+        operations.append(name2id_op(name))
+    results = esiclient.multi_request(operations)
+    ids = []
+    for idx, res in enumerate(results):
+        ids.append(get_character_id(names[idx], res[1].data.get('character', [])))
+    records = get_ccp_records(ids)
+    charlist = []
+    for record in records:
+        id = record[0]
+        data = record[1]
+        charlist.append(record2info(id, data, lookup_zkill_character(id)))
     return charlist
 
 @application.route('/')
@@ -269,7 +304,8 @@ def local():
     if request.method == 'POST':
         name_list = request.form['characters']
         names = name_list.splitlines()[:max_chars]
-    return dict(charlist=character_info_list(names), max_chars=max_chars)
+    charlist=multi_character_info_list(names)
+    return dict(charlist=charlist, max_chars=max_chars)
 
 @application.route('/test')
 @templated('index.html')
@@ -281,7 +317,7 @@ def test1():
         'FESSA13','Fineas ElMaestro','Frack Taron','g0ldent0y','Gunner wortherspoon','gunofaugust',
         'Heior','Highshott','Irisfar Senpai','Jettero Prime','Jocelyn Rotineque'
     ]
-    return dict(charlist=character_info_list(names), max_chars=max_chars)
+    return dict(charlist=multi_character_info_list(names), max_chars=max_chars)
 
 @application.route('/favicon.ico')
 def icon():
