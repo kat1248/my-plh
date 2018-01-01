@@ -88,23 +88,12 @@ def name2id_op(name):
     )
     return op
 
-@cache.memoize(timeout=24*60*60)
-def name2id(name):
-    response = esiclient.request(name2id_op(name))
-    chars = response.data.get('character', [])
-    return chars
-
 def id2record_op(character_id):
     op = esiapp.op['get_characters_character_id'](
         character_id=character_id, 
         datasource=config.ESI_DATASOURCE
     )
     return op
-
-@cache.memoize()
-def id2record(character_id):
-    response = esiclient.request(id2record_op(character_id))
-    return response.data
 
 @cache.memoize(timeout=24*60*60)
 def lookup_corp(corporation_id):
@@ -216,7 +205,6 @@ def get_character_id(name, character_ids):
     elif len(character_ids) == 1:
         character_id = character_ids[0]
     else:
-        print 'multi character id'
         records = get_ccp_records(character_ids)
         for record in records:
             data = record[1]
@@ -278,18 +266,26 @@ def get_ccp_records(id_list):
 
 def multi_character_info_list(names):
     operations = []
-    for name in names:
-        operations.append(name2id_op(name))
-    results = esiclient.multi_request(operations)
-    ids = []
-    for idx, res in enumerate(results):
-        ids.append(get_character_id(names[idx], res[1].data.get('character', [])))
-    records = get_ccp_records(ids)
     charlist = []
-    for record in records:
-        id = record[0]
-        data = record[1]
-        charlist.append(record2info(id, data, lookup_zkill_character(id)))
+    names_to_lookup = []
+    for name in names:
+        rv = cache.get(name)
+        if rv is None:
+            names_to_lookup.append(name)
+            operations.append(name2id_op(name))
+        else:
+            charlist.append(rv)
+    if len(operations) > 0:
+        results = esiclient.multi_request(operations)
+        ids = []
+        for idx, res in enumerate(results):
+            ids.append(get_character_id(names_to_lookup[idx], res[1].data.get('character', [])))
+        records = get_ccp_records(ids)
+        for idx2, record in enumerate(records):
+            id = record[0]
+            data = record2info(id, record[1], lookup_zkill_character(id))
+            cache.set(names_to_lookup[idx2], data, timeout=60*60)
+            charlist.append(data)
     return charlist
 
 @application.route('/')
