@@ -46,14 +46,6 @@ max_chars = config.MAX_CHARS
 # create the app
 esiapp = App.create(config.ESI_SWAGGER_JSON)
 
-# init the security object
-# esisecurity = EsiSecurity(
-#     app=esiapp,
-#     redirect_uri=config.ESI_CALLBACK,
-#     client_id=config.ESI_CLIENT_ID,
-#     secret_key=config.ESI_SECRET_KEY,
-# )
-
 # init the client
 esiclient = EsiClient(
     security=None,
@@ -130,12 +122,6 @@ def lookup_zkill_character(character_id):
     r = requests.get(req, headers=zkill_request_headers)
     return json.loads(r.text)
 
-def lookup_zkill_characters(character_ids):
-    character_id_list = ','.join(str(x) for x in sorted(character_ids))
-    req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(character_id_list)
-    r = requests.get(req, headers=zkill_request_headers)
-    return json.loads(r.text)
-
 @cache.memoize()
 def lookup_corp_danger(corporation_id):
     req = 'https://zkillboard.com/api/stats/corporationID/{0}/'.format(corporation_id)
@@ -143,8 +129,8 @@ def lookup_corp_danger(corporation_id):
     d = json.loads(r.text)
     return d.get('dangerRatio', 0)
 
-def fetch_last_kill(cid):
-    req = 'https://zkillboard.com/api/stats/characterID/{0}/limit/1/'.format(cid)
+def fetch_last_kill(character_id):
+    req = 'https://zkillboard.com/api/characterID/{0}/limit/1/'.format(character_id)
     r = requests.get(req, headers=zkill_request_headers)
     d = json.loads(r.text)[0]
     when = d['killmail_time'].split("T")[0]
