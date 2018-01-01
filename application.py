@@ -104,7 +104,6 @@ def lookup_corp(corporation_id):
     response = esiclient.request(op)
     return response.data[0].get('corporation_name', '')
 
-@cache.memoize()
 def lookup_corp_startdate(character_id):
     op = esiapp.op['get_characters_character_id_corporationhistory'](
         character_id=character_id, 
@@ -126,13 +125,11 @@ def lookup_alliance(alliance_id):
     return response.data[0].get('alliance_name', '')
 
 # ZKillboard Api calls
-@cache.memoize()
 def lookup_zkill_character(character_id):
     req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(character_id)
     r = requests.get(req, headers=zkill_request_headers)
     return json.loads(r.text)
 
-@cache.memoize()
 def lookup_zkill_characters(character_ids):
     character_id_list = ','.join(str(x) for x in sorted(character_ids))
     req = 'https://zkillboard.com/api/stats/characterID/{0}/'.format(character_id_list)
@@ -146,7 +143,6 @@ def lookup_corp_danger(corporation_id):
     d = json.loads(r.text)
     return d.get('dangerRatio', 0)
 
-@cache.memoize()
 def fetch_last_kill(cid):
     req = 'https://zkillboard.com/api/stats/characterID/{0}/limit/1/'.format(cid)
     r = requests.get(req, headers=zkill_request_headers)
@@ -196,7 +192,6 @@ def age2seconds(a_date):
     td = today - a_date.v
     return td.total_seconds()
 
-@cache.memoize()
 def get_character_id(name, character_ids):
     character_id = None
     record = {}
@@ -213,7 +208,6 @@ def get_character_id(name, character_ids):
                 break
     return character_id
 
-@cache.memoize()
 def record2info(character_id, ccp_info, zkill_info):
     name = ccp_info.get('name', '')
     if name in nicknames:
