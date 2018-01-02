@@ -1,135 +1,124 @@
-<!doctype html>
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
   <head>
+    <meta charset="utf-8">
+    <meta name="theme-color" content="#337ab7"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Signal Cartel's Little Helper</title>
     <link type="text/css" rel="stylesheet" href="{{url_for('static', filename='mystyle.css')}}"/> 
+    <script src="{{ url_for('static', filename='jquery-3.2.1.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/rg-1.0.2/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/rg-1.0.2/datatables.min.js"></script>
   </head>
   <body style="background-color: #337ab7;">
     <H1 style="text-align: center; color: White;">Signal Cartel's Little Helper</H1>
-      <div class="container">
-      <form action = "{{ url_for('local') }}" method = "POST">
-        <p><textarea name="characters" placeholder="Enter Character Names (maximum {{ max_chars }})" rows=10 cols=40></textarea>
-        <p><input type="Submit" value="Submit" maxlength="1000"/><input type="reset" /></p>
-      </form>
-      <table id="chars" class="chars">
+    <div class="container">
+      <label id="group-button"></label>
+      <table id="chars" class="compact stripe order-column">
           <thead>
-              <tr class="header">
+            <tr class="header">
               <th></th>
-              <th class="header_button" onclick="sortTable(1)">Name</th>
+              <th>Name</th>
               <th>Age</th>
-              <th class="header_button" onclick="sortTable(3)">Danger Level</th>
-              <th class="header_button" onclick="sortTable(4)">Gang %</th>
-              <th class="header_button" onclick="sortTable(5)">Security</th>
-              <th class="header_button" onclick="sortTable(6)">Kills</th>
-              <th class="header_button" onclick="sortTable(7)">Losses</th>
+              <th>Danger Level</th>
+              <th>Gang %</th>
+              <th>Security</th>
+              <th>Kills</th>
+              <th>Losses</th>
               <th></th>
-              <th class="header_button" onclick="sortTable(9)">Corp</th>
-              <th class="header_button" onclick="sortTable(10)">Alliance</th>
+              <th>Corp</th>
+              <th>Alliance</th>
               <th>Last Activity</th>
-              <th class="header_button" onclick="sortTable(12)">Time in Corp</th>
-          </tr>
+              <th>Time in Corp</th>
+            </tr>
           </thead>
-        <tfoot>
-              <tr class="header">
+          <tfoot>
+            <tr class="header">
               <th></th>
-              <th class="header_button" onclick="sortTable(1)">Name</th>
+              <th>Name</th>
               <th>Age</th>
-              <th class="header_button" onclick="sortTable(3)">Danger Level</th>
-              <th class="header_button" onclick="sortTable(4)">Gang %</th>
-              <th class="header_button" onclick="sortTable(5)">Security</th>
-              <th class="header_button" onclick="sortTable(6)">Kills</th>
-              <th class="header_button" onclick="sortTable(7)">Losses</th>
+              <th>Danger Level</th>
+              <th>Gang %</th>
+              <th>Security</th>
+              <th>Kills</th>
+              <th>Losses</th>
               <th></th>
-              <th class="header_button" onclick="sortTable(9)">Corp</th>
-              <th class="header_button" onclick="sortTable(10)">Alliance</th>
+              <th>Corp</th>
+              <th>Alliance</th>
               <th>Last Activity</th>
-              <th class="header_button" onclick="sortTable(12)">Time in Corp</th>
-          </tr>
+              <th>Time in Corp</th>
+            </tr>
           </tfoot>
           <tbody>
-    {% set ns = namespace(use_background=false) %}
-    {% for corp in charlist|groupby('corp_name') %}
-    {% for char in corp.list %}
-    <tr class="{% if ns.use_background %}odd{% else %}even{% endif %}">
+    {% for char in charlist %}
+    <tr>
       <td class="{% if char.danger > 50 %}danger_{% endif %}thumb">
-        <img src="https://image.eveonline.com/Character/{{ char.character_id }}_64.jpg" height="32" width="32">
-        <span><img src="https://image.eveonline.com/Character/{{ char.character_id }}_512.jpg" alt=""></span>
+        <img src="https://image.eveonline.com/Character/{{ char.character_id }}_64.jpg" height="32" width="32" alt="{{ char.name }} thumbnail">
+        <span><img src="https://image.eveonline.com/Character/{{ char.character_id }}_512.jpg" alt= alt="{{ char.name }} portrait"></span>
       </td>
-      <td>{% if char.has_killboard %}<a href="https://zkillboard.com/character/{{ char.character_id }}/" target="_blank">{{ char.name }}</a>{% else %}{{ char.name }} {% endif %}</td>
+      <td>{% if char.has_killboard %}<a href="https://zkillboard.com/character/{{ char.character_id }}/" target="_blank" rel="noopener">{{ char.name }}</a>{% else %}{{ char.name }} {% endif %}</td>
       <td>{{ char.age }}</td>
-      <td class="{% if char.danger > 50 %}danger_alert{% else %}data{% endif %}">{% if char.danger > 0 %}{{ char.danger }}{% endif %}</td>  
-      <td class="data">{% if char.gang > 0 %}{{ char.gang }}{% endif %}</td>
-      <td class="{% if char.security < 0.0 %}danger_alert{% else %}data{% endif %}">{{ char.security }}</td>
-      <td class="data">{{ char.kills }}</td>
-      <td class="data">{{ char.losses }}</td>
-      <td><img src="https://imageserver.eveonline.com/Corporation/{{ char.corp_id }}_64.png" height="32" width="32"></td>
-      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.is_npc_corp %} class="npc_corp"{% endif %} title="Corporation Danger Level: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank">{{ char.corp_name }}</a></td>
+      <td class="dt-body-center {% if char.danger > 50 %}danger_alert{% endif %}">{% if char.danger > 0 %}{{ char.danger }}{% endif %}</td>  
+      <td class="dt-body-center">{% if char.gang > 0 %}{{ char.gang }}{% endif %}</td>
+      <td class="dt-body-center {% if char.security < 0.0 %}danger_alert{% endif %}">{{ char.security }}</td>
+      <td class="dt-body-center">{{ char.kills }}</td>
+      <td class="dt-body-center">{{ char.losses }}</td>
+      <td><img src="https://imageserver.eveonline.com/Corporation/{{ char.corp_id }}_64.png" height="32" width="32" alt="{{ char.corp_name }} thumbnail"></td>
+      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.is_npc_corp %} class="npc_corp"{% endif %} title="Corporation Danger Level: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a></td>
       <td>{{ char.alliance_name }}</td>
       <td>{{ char.last_kill }}</td>
       <td>{{ char.corp_age }} days</td>
     </tr>
     {% endfor %}
-    {% set ns.use_background = not ns.use_background %}
-    {% endfor %}
-  </tbody>
+          </tbody>
       </table> 
-    </div>
-<script>
-    function isNumeric(n) {
-        return !isNaN(parseFloat(n)) && isFinite(n);
-    }
-    function sortTable(n) {
-        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-        table = document.getElementById("chars");
-        switching = true;
-        dir = "asc"; 
-        while (switching) {
-            switching = false;
-            rows = table.getElementsByTagName("TR");
-            for (i = 2; i < (rows.length - 1); i++) {
-                shouldSwitch = false;
-                x = rows[i].getElementsByTagName("TD")[n];
-                y = rows[i + 1].getElementsByTagName("TD")[n];
-                var value1 = x.innerText;
-                var value2 = y.innerText;
-                if (dir == "asc") {
-                    if (isNumeric(value1) && isNumeric(value2)) {
-                        if (Number(value1) > Number(value2)) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    } else {
-                        if (value1.toLowerCase() > value2.toLowerCase()) {
-                            shouldSwitch = true;
-                            break;
-                        }
+     <form action = "{{ url_for('local') }}" method = "POST">
+        <textarea name="characters" placeholder="Enter Character Names (maximum {{ max_chars }})" rows=10 cols=25></textarea>
+        <p><input type="Submit" value="Submit" maxlength="1000"/>
+        <input type="reset" /></p>
+      </form>
+     </div>
+    <script>
+      var table;
+      function toggleCorpGrouping() {
+          var vis = table.column(9).visible();
+          table.column(9).visible(!vis, false);
+          if (vis) {
+               table.button(0).text('Ungroup')
+               table.column(9).order( 'asc' )
+               table.rowGroup().enable()       
+          } else {
+               table.button(0).text('Group')
+               table.rowGroup().disable()
+               table.column(1).order( 'asc' )
+          }
+          table.draw();
+      }
+      $(document).ready( function () {
+          table = $('#chars').DataTable( {
+              order: [[9, 'asc'], [1, 'asc']],
+              columnDefs: [
+                  { "orderable": false, "targets": [0, 2, 8] },
+                  { "visible": true, "targets": [ 9 ] }
+              ],
+              buttons: [
+                  {
+                    text: 'Group',
+                    action: function (e, dt, node, config) {
+                        toggleCorpGrouping();
                     }
-                } else if (dir == "desc") {
-                    if (isNumeric(value1) && isNumeric(value2)) {
-                        if (Number(value1) < Number(value2)) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    } else {
-                        if (value1.toLowerCase() < value2.toLowerCase()) {
-                            shouldSwitch= true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (shouldSwitch) {
-                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                switching = true;
-                switchcount ++;      
-            } else {
-                if (switchcount == 0 && dir == "asc") {
-                    dir = "desc";
-                    switching = true;
-                }
-            }
-        }
-    }
-</script>
+                  }
+              ],
+              info: false,
+              paging: true,
+              rowGroup: {
+                  dataSrc: 9,
+                  enable: false
+              },
+              searching: true,
+           });
+           table.button().container().appendTo( $('#group-button') )
+      });
+    </script>
   </body>
 </html>

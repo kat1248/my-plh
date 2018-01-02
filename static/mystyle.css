@@ -22,12 +22,13 @@
         background-color: rgba(51, 122, 183, 0.5);
         border-collapse: collapse;
         padding: 3px;
+        float: right;
     }
     th, td, tr { 
         padding: 5px; 
     }
-    div.container { w
-        idth: 100%; 
+    div.container {
+        width: 100%; 
     }
     form {
         border: 2px solid Black;
@@ -44,9 +45,7 @@
     }
     tr.header {
         background-color: White;
-    }
-    tr.odd:hover, tr.even:hover {
-        background-color: Silver;
+        font-size: 16px; 
     }
     .clearfix { 
         overflow: auto; 
@@ -59,17 +58,8 @@
         border: 3px solid Green;
         border-style: groove;
     }
-    tr.odd { 
-        background-color: GainsBoro;
-    }
-    tr.even { 
-        background-color: WhiteSmoke;
-    }
-    tr.even, tr.odd { 
+    tr { 
         border: 1px solid #c6c6c6; 
-    }
-    td.danger_alert, td.data {
-        text-align: center; 
     }
     .danger_thumb, .thumb {
         float: left; /* must be floated for same cross browser position of larger image */
@@ -96,7 +86,7 @@
     }
     .danger_thumb:hover span, .thumb:hover span { 
         visibility: visible;
-        top: 5px; left: 43px; 
+        top: 4px; left: 42px; 
     }
     th {
         font-style: bold;

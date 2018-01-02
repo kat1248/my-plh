@@ -3,6 +3,7 @@
 # zkillboard api = https://github.com/zKillboard/zKillboard/wiki/API-(Statistics)
 # eve api = https://esi.tech.ccp.is/latest/
 # plh = https://github.com/rischwa/eve-plh
+# DataTables = https://datatables.net/
 # my id = 92942102
 
 from flask import Flask, render_template, request, redirect, url_for
@@ -31,7 +32,7 @@ application.config.from_object(config)
 cache = Cache(application, with_jinja2_ext=False, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 60*60})
 
 zkill_request_headers = {
-    'user-agent': 'kat1248@gmail.com Signal Cartel Little Helper'
+    'user-agent': 'kat1248@gmail.com Signal Cartel Little Helper http://sclh.servegame.org'
 }
 
 # map of name to nickname, easter egg
