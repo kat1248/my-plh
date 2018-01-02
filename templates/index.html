@@ -46,6 +46,7 @@
               <th class="header_button" onclick="sortTable(12)">Time in Corp</th>
           </tr>
           </tfoot>
+          <tbody>
     {% set ns = namespace(use_background=false) %}
     {% for corp in charlist|groupby('corp_name') %}
     {% for char in corp.list %}
@@ -70,6 +71,7 @@
     {% endfor %}
     {% set ns.use_background = not ns.use_background %}
     {% endfor %}
+  </tbody>
       </table> 
     </div>
 <script>
