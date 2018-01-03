@@ -64,6 +64,7 @@ body {
     font-size: 14px; 
     background-color: #000; 
     background-image: url(../static/zephyr-wallpaper.jpg);
+    background-repeat: no-repeat;
 }
 .big_container {
     padding: 10px;
@@ -74,4 +75,5 @@ form {
     margin-right: 5px;
     border-radius: 5px;
     float: left;
+    background-color: #1a3d5c;
 }
