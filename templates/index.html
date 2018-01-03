@@ -30,6 +30,9 @@
               <th>Alliance</th>
               <th>Last Activity</th>
               <th>Time in Corp</th>
+              <th>Corp ID</th>
+              <th>Corp Danger</th>
+              <th>NPC Corp</th>
             </tr>
           </thead>
           <tfoot>
@@ -47,6 +50,9 @@
               <th>Alliance</th>
               <th>Last Activity</th>
               <th>Time in Corp</th>
+              <th>Corp ID</th>
+              <th>Corp Danger</th>
+              <th>NPC Corp</th>
             </tr>
           </tfoot>
           <tbody>
@@ -68,11 +74,14 @@
       <td>{{ char.alliance_name }}</td>
       <td>{{ char.last_kill }}</td>
       <td>{{ char.corp_age }} days</td>
+      <td>{{ char.corp_id }}</td>
+      <td>{{ char.corp_danger }}</td>
+      <td>{% if char.is_npc_corp %}true{% else %}false{% endif %}</td>
     </tr>
     {% endfor %}
           </tbody>
       </table> 
-     <form action = "{{ url_for('local') }}" method = "POST">
+     <form action="{{ url_for('local') }}" method="POST">
         <textarea name="characters" placeholder="Enter Character Names (maximum {{ max_chars }})" rows=10 cols=35></textarea>
         <p><input type="Submit" value="Submit" maxlength="1000"/>
         <input type="reset" /></p>
@@ -80,40 +89,27 @@
        <label id="group-button"></label>
      </div>
     <script>
-      var corp_id = {}
-      var corp_alliance = {}
-      var corp_danger = {}
-      var npc_corp = {}
-    {% for char in charlist %}
-      corp_id[ '<a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a>' ] = '{{ char.corp_id }}'
-      corp_alliance[ '<a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a>' ] = '{{ char.alliance_name }}'
-      corp_danger[ '<a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a>' ] = {{ char.corp_danger }}
-      npc_corp[ '<a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a>' ] = {% if char.is_npc_corp %}true{% else %}false{% endif %}
-    {% endfor %}
       var table;
-      function corpNumber( corp ) {
-        return corp_id[ corp ]
-      }
-      function groupRow( group ) {
-        var row = '<tr><td'
-        if ( corp_danger[ group ] > 50 ) {
-          row += ' class="danger"'
-        } else if ( npc_corp[ group ] ) {
-          row += ' class="safe"'
-        }
-        row += '><img src="https://imageserver.eveonline.com/Corporation/' + corpNumber( group )
-        row += '_64.png" height="32" width="32"></td><td>' + group + '  (' + corp_alliance[ group ] + ')</td></tr>'
-        return row
+      function groupRow( group, alliance, corp_id, corp_danger, npc_corp ) {
+          var row = '<tr><td'
+          if ( corp_danger > 50 ) {
+              row += ' class="danger"'
+          } else if ( npc_corp == 'true' ) {
+              row += ' class="safe"'
+          }
+          row += '><img src="https://imageserver.eveonline.com/Corporation/' + corp_id
+          row += '_64.png" height="32" width="32"></td><td>' + group + '  (' + alliance + ')</td></tr>'
+          return row
       }
       function toggleCorpGrouping() {
           var vis = table.column(9).visible();
           table.column(9).visible(!vis, false);
           if ( vis ) {
-               table.button(0).text( 'Ungroup' )
-               table.column(9).order( 'asc' )
-               table.column(8).visible( false, false );
-               table.column(10).visible( false, false );
-               table.rowGroup().enable()       
+              table.button(0).text( 'Ungroup' )
+              table.column(9).order( 'asc' )
+              table.column(8).visible( false, false );
+              table.column(10).visible( false, false );
+              table.rowGroup().enable()
           } else {
                table.button(0).text( 'Group by Corporation')
                table.column(1).order( 'asc' )
@@ -128,7 +124,8 @@
               order: [ [ 9, 'asc' ], [ 1, 'asc' ] ],
               columnDefs: [
                   { "orderable": false, "targets": [ 0, 2, 8, 11, 12 ] },
-                  { "visible": true, "targets": [ 9 ] }
+                  { "visible": true, "targets": [ 9 ] },
+                  { "visible": false, "targets": [ 13, 14, 15 ] }
               ],
               buttons: [
                   {
@@ -144,7 +141,11 @@
                   dataSrc: 9,
                   enable: false,
                   startRender: function ( rows, group ) {
-                    return groupRow( group )
+                    var alliance = rows.data().pluck(10).reduce( function ( a, b ) { return b; } )
+                    var corp_id = rows.data().pluck(13).reduce( function ( a, b ) { return b; } )
+                    var corp_danger = rows.data().pluck(14).reduce( function ( a, b ) { return b; } )
+                    var npc_corp = rows.data().pluck(15).reduce( function ( a, b ) { return b; } )
+                    return groupRow( group, alliance, corp_id, corp_danger, npc_corp )
                   }
               },
               searching: true,
