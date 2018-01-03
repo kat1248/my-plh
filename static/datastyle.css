@@ -53,6 +53,9 @@ td.safe {
     border: 2px solid Green;
     border-style: groove;
 }
+label {
+    color: White;
+}
 table {
     padding: 0px;     
 }

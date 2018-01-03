@@ -14,7 +14,6 @@
   <body style="background-color: #337ab7;">
     <H1 style="text-align: center; color: White;">Signal Cartel's Little Helper</H1>
     <div class="container">
-      <label id="group-button"></label>
       <table id="chars" class="compact stripe order-column hover">
           <thead>
             <tr class="header">
@@ -77,7 +76,8 @@
         <textarea name="characters" placeholder="Enter Character Names (maximum {{ max_chars }})" rows=10 cols=35></textarea>
         <p><input type="Submit" value="Submit" maxlength="1000"/>
         <input type="reset" /></p>
-      </form>
+     </form>
+     <label id="group-button"></label>
      </div>
     <script>
       var corp_id = {}
@@ -152,7 +152,6 @@
               searching: true,
               fixedHeader: true,
               autoWidth: false,
-              language: { search: "" },
            });
            table.button().container().appendTo( $('#group-button') )
       });
