@@ -64,7 +64,7 @@
       <td class="dt-body-center">{{ char.kills }}</td>
       <td class="dt-body-center">{{ char.losses }}</td>
       <td><img src="https://imageserver.eveonline.com/Corporation/{{ char.corp_id }}_64.png" height="32" width="32" alt="{{ char.corp_name }} thumbnail"></td>
-      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.is_npc_corp %} class="safe"{% endif %} title="Corporation Danger Level: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a></td>
+      <td{% if char.corp_danger > 50 %} class="danger"{% elif char.is_npc_corp %} class="safe"{% endif %} title="Corporation Danger Level: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a></td>
       <td>{{ char.alliance_name }}</td>
       <td>{{ char.last_kill }}</td>
       <td>{{ char.corp_age }} days</td>
