@@ -264,9 +264,10 @@ def multi_character_info_list(names):
         records = get_ccp_records(ids)
         for idx2, record in enumerate(records):
             id = record[0]
-            data = record2info(id, record[1], lookup_zkill_character(id))
-            cache.set(names_to_lookup[idx2], data, timeout=60*60)
-            charlist.append(data)
+            if id is not None:
+                data = record2info(id, record[1], lookup_zkill_character(id))
+                cache.set(names_to_lookup[idx2], data, timeout=60*60)
+                charlist.append(data)
     return charlist
 
 @application.route('/')
