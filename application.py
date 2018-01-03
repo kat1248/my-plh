@@ -271,7 +271,7 @@ def multi_character_info_list(names):
 
 @application.route('/')
 @templated('index.html')
-def lookup():
+def index():
     return dict(charlist=[], max_chars=max_chars)
 
 @application.route('/local', methods = ['POST', 'GET'])

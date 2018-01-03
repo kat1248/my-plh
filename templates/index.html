@@ -5,16 +5,17 @@
     <meta name="theme-color" content="#337ab7"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Signal Cartel's Little Helper</title>
-    <link type="text/css" rel="stylesheet" href="{{url_for('static', filename='mystyle.css')}}"/> 
+    <link type="text/css" rel="stylesheet" href="{{url_for('static', filename='tablestyle.css')}}"/>
+    <link type="text/css" rel="stylesheet" href="{{url_for('static', filename='datastyle.css')}}"/>
     <script src="{{ url_for('static', filename='jquery-3.2.1.min.js') }}"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/rg-1.0.2/datatables.min.css"/>
-    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/rg-1.0.2/datatables.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/fh-3.1.3/rg-1.0.2/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/fh-3.1.3/rg-1.0.2/datatables.min.js"></script>
   </head>
   <body style="background-color: #337ab7;">
     <H1 style="text-align: center; color: White;">Signal Cartel's Little Helper</H1>
     <div class="container">
       <label id="group-button"></label>
-      <table id="chars" class="compact stripe order-column">
+      <table id="chars" class="compact stripe order-column hover">
           <thead>
             <tr class="header">
               <th></th>
@@ -58,13 +59,13 @@
       </td>
       <td>{% if char.has_killboard %}<a href="https://zkillboard.com/character/{{ char.character_id }}/" target="_blank" rel="noopener">{{ char.name }}</a>{% else %}{{ char.name }} {% endif %}</td>
       <td>{{ char.age }}</td>
-      <td class="dt-body-center {% if char.danger > 50 %}danger_alert{% endif %}">{% if char.danger > 0 %}{{ char.danger }}{% endif %}</td>  
+      <td class="dt-body-center {% if char.danger > 50 %}danger{% endif %}">{% if char.danger > 0 %}{{ char.danger }}{% endif %}</td>  
       <td class="dt-body-center">{% if char.gang > 0 %}{{ char.gang }}{% endif %}</td>
-      <td class="dt-body-center {% if char.security < 0.0 %}danger_alert{% endif %}">{{ char.security }}</td>
+      <td class="dt-body-center {% if char.security < 0.0 %}danger{% endif %}">{{ char.security }}</td>
       <td class="dt-body-center">{{ char.kills }}</td>
       <td class="dt-body-center">{{ char.losses }}</td>
       <td><img src="https://imageserver.eveonline.com/Corporation/{{ char.corp_id }}_64.png" height="32" width="32" alt="{{ char.corp_name }} thumbnail"></td>
-      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.is_npc_corp %} class="npc_corp"{% endif %} title="Corporation Danger Level: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a></td>
+      <td{% if char.corp_danger > 50 %} class="corp_alert"{% elif char.is_npc_corp %} class="safe"{% endif %} title="Corporation Danger Level: {{ char.corp_danger }}"><a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a></td>
       <td>{{ char.alliance_name }}</td>
       <td>{{ char.last_kill }}</td>
       <td>{{ char.corp_age }} days</td>
@@ -73,24 +74,54 @@
           </tbody>
       </table> 
      <form action = "{{ url_for('local') }}" method = "POST">
-        <textarea name="characters" placeholder="Enter Character Names (maximum {{ max_chars }})" rows=10 cols=25></textarea>
+        <textarea name="characters" placeholder="Enter Character Names (maximum {{ max_chars }})" rows=10 cols=35></textarea>
         <p><input type="Submit" value="Submit" maxlength="1000"/>
         <input type="reset" /></p>
       </form>
      </div>
     <script>
+      var corp_id = {}
+      var corp_alliance = {}
+      var corp_danger = {}
+      var npc_corp = {}
+    {% for char in charlist %}
+      corp_id[ '<a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a>' ] = '{{ char.corp_id }}'
+      corp_alliance[ '<a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a>' ] = '{{ char.alliance_name }}'
+      corp_danger[ '<a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a>' ] = {{ char.corp_danger }}
+      npc_corp[ '<a href="https://zkillboard.com/corporation/{{ char.corp_id }}/" target="_blank" rel="noopener">{{ char.corp_name }}</a>' ] = {% if char.is_npc_corp %}true{% else %}false{% endif %}
+    {% endfor %}
       var table;
+      function corpNumber( corp ) {
+        return corp_id[ corp ]
+      }
+      function groupRow( group ) {
+        var row = '<tr>'
+        row += '<td'
+        if ( corp_danger[ group ] > 50 ) {
+          row += ' class="danger"'
+        } else if ( npc_corp[ group ] ) {
+          row += ' class="safe"'
+        }
+        row += '><img src="https://imageserver.eveonline.com/Corporation/'
+        row += corpNumber( group )
+        row += '_64.png" height="32" width="32"></td>' + '<td>' + group + '  (' + corp_alliance[ group ] + ')</td></tr>'
+        return row
+      }
       function toggleCorpGrouping() {
           var vis = table.column(9).visible();
           table.column(9).visible(!vis, false);
-          if (vis) {
-               table.button(0).text('Ungroup')
+          if ( vis ) {
+               table.button(0).text( 'Ungroup')
                table.column(9).order( 'asc' )
+               table.column(8).visible( false, false );
+               table.column(10).visible( false, false );
                table.rowGroup().enable()       
           } else {
-               table.button(0).text('Group')
-               table.rowGroup().disable()
+               table.button(0).text(' Group')
                table.column(1).order( 'asc' )
+               table.column(8).visible( true, false );
+               table.column(10).visible( true, false );
+               table.rowGroup().disable()
           }
           table.draw();
       }
@@ -98,7 +129,7 @@
           table = $('#chars').DataTable( {
               order: [[9, 'asc'], [1, 'asc']],
               columnDefs: [
-                  { "orderable": false, "targets": [0, 2, 8] },
+                  { "orderable": false, "targets": [ 0, 2, 8, 11, 12 ] },
                   { "visible": true, "targets": [ 9 ] }
               ],
               buttons: [
@@ -113,9 +144,15 @@
               paging: true,
               rowGroup: {
                   dataSrc: 9,
-                  enable: false
+                  enable: false,
+                  startRender: function ( rows, group ) {
+                    return groupRow( group )
+                  }
               },
               searching: true,
+              fixedHeader: true,
+              autoWidth: false,
+              language: { search: "" },
            });
            table.button().container().appendTo( $('#group-button') )
       });

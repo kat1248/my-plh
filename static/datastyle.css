@@ -1,0 +1,70 @@
+@font-face {
+    font-family: static;
+    src: url('static.woff');
+}
+@font-face {
+    font-family: static;
+    font-weight: bold;
+    src: url('staticbold.woff');
+}
+@font-face {
+    font-family: static;
+    font-weight: italic;
+    src: url('staticitalic.woff');
+}
+.danger_thumb, .thumb {
+    float: left; /* must be floated for same cross browser position of larger image */
+    position: relative;
+    margin: 1px;
+}
+.thumb img, .danger_thumb img { 
+    border-style: groove;
+    vertical-align: bottom;
+}
+.thumb img { 
+    border: 2px solid #000;
+}
+.danger_thumb img {
+    border: 2px solid Red;
+}
+.danger_thumb:hover, .thumb:hover {
+    border: 0; /* IE6 needs this to show large image */
+    z-index: 1;
+}
+.danger_thumb span, .thumb span { 
+    position: absolute;
+    visibility: hidden;
+}
+.danger_thumb:hover span, .thumb:hover span { 
+    visibility: visible;
+    top: 4px; left: 42px; 
+}
+.dataTables_filter {
+    padding: 2px;
+}
+tr.header {
+    background-color: White;
+}
+td.danger { 
+    border: 2px solid Red;
+    border-style: groove;
+}
+td.safe { 
+    border: 2px solid Green;
+    border-style: groove;
+}
+table {
+    padding: 0px;     
+}
+body {
+    font-family: static;
+    font-size: 14px; 
+    background-color: #000; 
+}
+form {
+    border: 2px solid Black;
+    padding: 5px;
+    margin-right: 5px;
+    border-radius: 5px;
+    float: left;
+}

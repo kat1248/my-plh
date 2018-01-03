@@ -16,9 +16,10 @@
         font-family: static;
         font-size: 14px; 
         background-color: #000; 
+        color: White;
     }
     table {
-        border: 2px solid Black;
+        /*border: 2px solid Black;*/
         background-color: rgba(51, 122, 183, 0.5);
         border-collapse: collapse;
         padding: 3px;
@@ -41,6 +42,9 @@
         display: block;
         margin-left: auto;
         margin-right: auto;
+        padding: 0px;
+    }
+    tr.group-start {
         padding: 0px;
     }
     tr.header {
@@ -95,4 +99,7 @@
         border: 1px solid #c6c6c6;
         background-color: LightGray;
         cursor: pointer;
+    }
+    .label {
+        color: White;
     }
