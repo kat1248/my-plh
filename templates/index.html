@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <meta name="theme-color" content="#337ab7"/>
+    <meta name="theme-color" content="#1a3d5c"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Signal Cartel's Little Helper</title>
     <link type="text/css" rel="stylesheet" href="{{url_for('static', filename='tablestyle.css')}}"/>
@@ -11,8 +11,8 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/fh-3.1.3/rg-1.0.2/datatables.min.css"/>
     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.16/b-1.5.1/fh-3.1.3/rg-1.0.2/datatables.min.js"></script>
   </head>
-  <body style="background-color: #337ab7;">
-    <H1 style="text-align: center; color: White;">Signal Cartel's Little Helper</H1>
+  <body style="background-color: #1a3d5c;">
+    <H1 style="text-align: center; color: White; background-color: #1a3d5c;padding: 7px;">Signal Cartel's Little Helper</H1>
     <div class="container">
       <table id="chars" class="compact stripe order-column hover">
           <thead>
@@ -72,12 +72,16 @@
     {% endfor %}
           </tbody>
       </table> 
+     <div style="background-color: #1a3d5c;">
      <form action = "{{ url_for('local') }}" method = "POST">
         <textarea name="characters" placeholder="Enter Character Names (maximum {{ max_chars }})" rows=10 cols=35></textarea>
         <p><input type="Submit" value="Submit" maxlength="1000"/>
         <input type="reset" /></p>
      </form>
-     <label id="group-button"></label>
+   </div>
+     <div style="background-color: #1a3d5c;">
+       <label id="group-button"></label>
+     </div>
      </div>
     <script>
       var corp_id = {}
