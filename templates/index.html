@@ -95,29 +95,27 @@
         return corp_id[ corp ]
       }
       function groupRow( group ) {
-        var row = '<tr>'
-        row += '<td'
+        var row = '<tr><td'
         if ( corp_danger[ group ] > 50 ) {
           row += ' class="danger"'
         } else if ( npc_corp[ group ] ) {
           row += ' class="safe"'
         }
-        row += '><img src="https://imageserver.eveonline.com/Corporation/'
-        row += corpNumber( group )
-        row += '_64.png" height="32" width="32"></td>' + '<td>' + group + '  (' + corp_alliance[ group ] + ')</td></tr>'
+        row += '><img src="https://imageserver.eveonline.com/Corporation/' + corpNumber( group )
+        row += '_64.png" height="32" width="32"></td><td>' + group + '  (' + corp_alliance[ group ] + ')</td></tr>'
         return row
       }
       function toggleCorpGrouping() {
           var vis = table.column(9).visible();
           table.column(9).visible(!vis, false);
           if ( vis ) {
-               table.button(0).text( 'Ungroup')
+               table.button(0).text( 'Ungroup' )
                table.column(9).order( 'asc' )
                table.column(8).visible( false, false );
                table.column(10).visible( false, false );
                table.rowGroup().enable()       
           } else {
-               table.button(0).text(' Group')
+               table.button(0).text( 'Group by Corporation')
                table.column(1).order( 'asc' )
                table.column(8).visible( true, false );
                table.column(10).visible( true, false );
@@ -126,16 +124,16 @@
           table.draw();
       }
       $(document).ready( function () {
-          table = $('#chars').DataTable( {
-              order: [[9, 'asc'], [1, 'asc']],
+          table = $( '#chars' ).DataTable( {
+              order: [ [ 9, 'asc' ], [ 1, 'asc' ] ],
               columnDefs: [
                   { "orderable": false, "targets": [ 0, 2, 8, 11, 12 ] },
                   { "visible": true, "targets": [ 9 ] }
               ],
               buttons: [
                   {
-                    text: 'Group',
-                    action: function (e, dt, node, config) {
+                    text: 'Group by Corporation',
+                    action: function ( e, dt, node, config ) {
                         toggleCorpGrouping();
                     }
                   }
@@ -153,7 +151,7 @@
               fixedHeader: true,
               autoWidth: false,
            });
-           table.button().container().appendTo( $('#group-button') )
+           table.button().container().appendTo( $( '#group-button' ) )
       });
     </script>
   </body>

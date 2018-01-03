@@ -292,7 +292,7 @@ def test1():
         'Azarkhy Alfik Thiesant','Bitter Dystany','Cartelus','Chilik','Connor McCloud McMahon','Dak Ad',
         'Darkschnyder','Davidkaa Smith','Dig Cos','Dimka Tallinn','Domenic Padre','Eudes Omaristos',
         'FESSA13','Fineas ElMaestro','Frack Taron','g0ldent0y','Gunner wortherspoon','gunofaugust',
-        'Heior','Highshott','Irisfar Senpai','Jettero Prime','Jocelyn Rotineque'
+        'Heior','Highshott','Irisfar Senpai','Jettero Prime','Jocelyn Rotineque', 'Dar Mineret'
     ]
     return dict(charlist=multi_character_info_list(names), max_chars=max_chars)
 
