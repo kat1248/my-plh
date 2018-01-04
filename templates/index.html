@@ -90,6 +90,10 @@
      </div>
     <script>
       var table;
+      String.prototype.format = function () {
+          var args = arguments;
+          return this.replace(/\{(\d+)\}/g, function (m, n) { return args[n]; });
+      }
       function groupRow( group, alliance, corp_id, corp_danger, npc_corp ) {
           var row = '<tr><td'
           if ( corp_danger > 50 ) {
@@ -97,8 +101,7 @@
           } else if ( npc_corp == 'true' ) {
               row += ' class="safe"'
           }
-          row += '><img src="https://imageserver.eveonline.com/Corporation/' + corp_id
-          row += '_64.png" height="32" width="32"></td><td>' + group + '  (' + alliance + ')</td></tr>'
+          row += '><img src="https://imageserver.eveonline.com/Corporation/{0}_64.png" height="32" width="32"></td><td>{1}  ({2})</td></tr>'.format(corp_id, group, alliance)
           return row
       }
       function toggleCorpGrouping() {

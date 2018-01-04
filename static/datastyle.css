@@ -60,10 +60,11 @@ table {
     padding: 0px;     
 }
 body {
-    font-family: static;
+    font-family: 'Lato',sans-serif;
+    /*font-family: static; */
     font-size: 14px; 
     background-color: #000; 
-/*  background-image: url(../static/zephyr-wallpaper.jpg); */
+    background-image: url(../static/zephyr-wallpaper.jpg);
     background-repeat: no-repeat;
 }
 .big_container {
