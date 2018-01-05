@@ -12,30 +12,39 @@
     font-weight: italic;
     src: url('staticitalic.woff');
 }
-.danger_thumb, .thumb {
+td.danger_thumb, td.thumb {
     float: left; /* must be floated for same cross browser position of larger image */
     position: relative;
     margin: 1px;
 }
-.thumb img, .danger_thumb img { 
+td.thumb img, td.danger_thumb img { 
     border-style: groove;
     vertical-align: bottom;
 }
-.thumb img { 
+td.thumb img { 
     border: 2px solid #000;
 }
-.danger_thumb img {
+td.thumb img { 
+    border: 2px solid #000;
+}
+td.blank_thumb img {
+    padding: 2px
+}
+td.danger_thumb img {
     border: 2px solid Red;
 }
-.danger_thumb:hover, .thumb:hover {
+td.safe_thumb img { 
+    border: 2px solid Green;
+}
+td.danger_thumb:hover, td.thumb:hover {
     border: 0; /* IE6 needs this to show large image */
     z-index: 1;
 }
-.danger_thumb span, .thumb span { 
+td.danger_thumb span, td.thumb span { 
     position: absolute;
     visibility: hidden;
 }
-.danger_thumb:hover span, .thumb:hover span { 
+td.danger_thumb:hover span, td.thumb:hover span { 
     visibility: visible;
     top: 4px; left: 42px; 
 }
@@ -46,12 +55,10 @@ tr.header {
     background-color: White;
 }
 td.danger { 
-    border: 2px solid Red;
-    border-style: groove;
+    color: Red;
 }
 td.safe { 
-    border: 2px solid Green;
-    border-style: groove;
+    color: Green;
 }
 label {
     color: White;

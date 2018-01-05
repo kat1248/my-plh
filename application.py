@@ -222,7 +222,6 @@ def record2info(character_id, ccp_info, zkill_info):
         name = nicknames[name]
     corp_id = ccp_info.get('corporation_id', 0)
     alliance_id = ccp_info.get('alliance_id', 0)
-    sec_status = float(ccp_info.get('security_status', 0))
     corp_start = lookup_corp_startdate(character_id)
 
     kills = zkill_info.get('shipsDestroyed', 0)
@@ -232,7 +231,7 @@ def record2info(character_id, ccp_info, zkill_info):
     char_info = {
         'name': name,
         'character_id': character_id,
-        'security': float('{0:1.2f}'.format(sec_status)),
+        'security': ccp_info.get('security_status', 0),
         'age': seconds2time(age2seconds(ccp_info['birthday'])),
         'danger': zkill_info.get('dangerRatio', 0),
         'gang': zkill_info.get('gangRatio', 0),
