@@ -17,7 +17,7 @@
       <table id="chars" class="compact stripe order-column hover">
           <thead>
             <tr class="header">
-              <th><img src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA="  height="2" width="2"></th>
+              <th></th>
               <th>Name</th>
               <th>Age</th>
               <th>Danger Level</th>
@@ -25,7 +25,7 @@
               <th>Security</th>
               <th>Kills</th>
               <th>Losses</th>
-              <th></th>
+              <th class="nothumb"></th>
               <th>Corp</th>
               <th>Alliance</th>
               <th>Last Activity</th>
@@ -126,6 +126,8 @@
             if ( data.danger > 50) {
               $('td:eq(0)', row).addClass( 'danger_thumb' );
               $('td:eq(3)', row).addClass( 'danger' );
+            } else {
+              $('td:eq(0)', row).addClass( 'thumb' );
             }
             if ( data.security < 0 ) {
               $('td:eq(5)', row).addClass( 'danger' );
@@ -184,8 +186,7 @@
               columns: [
                 { 
                   data: 'thumb', 
-                  render: rowFormatting.char_thumb,
-                  className: 'thumb'
+                  render: rowFormatting.char_thumb
                 },
                 { data: 'name',
                   render: rowFormatting.char_name
