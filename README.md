@@ -38,9 +38,11 @@ This assumes you have apache installed on your Linux host.
 $ sudo -H pip install -r requirements.txt
 ```
 3. Link the app directory to the site root
-```sudo ln -sT ~/flaskapp /var/www/html/my-plh
+
+```$ sudo ln -sT ~/flaskapp /var/www/html/my-plh
 ```
 4. Enable mod_wsgi by editing `/etc/apache2/apache2.conf` and adding
+
 ```WSGIDaemonProcess flaskapp threads=5
 WSGIScriptAlias / /var/www/html/my-plh/my-plh.wsgi
 
@@ -52,5 +54,6 @@ WSGIScriptAlias / /var/www/html/my-plh/my-plh.wsgi
 </Directory>
 ```
 5. Restart the webserver
+
 ```$ sudo apachectl restart
 ```
