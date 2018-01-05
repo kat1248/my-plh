@@ -3,3 +3,4 @@
 .elasticbeanstalk
 test
 *.pyc
+config.py
