@@ -89,7 +89,7 @@
           "is_npc_corp": {% if char.is_npc_corp %}true{% else %}false{% endif %},
           "char_id": {{ char.character_id }}, }, {% endfor %}]
       var table;
-      var rowFormatting = (function () {
+      var dataFormatting = (function () {
         return {
           char_name: function ( data, type, row ) {
             if ( row.has_killboard ) {
@@ -147,7 +147,7 @@
           return this.replace(/\{(\d+)\}/g, function (m, n) { return args[n]; });
       }
       function groupRow( group, alliance_name, corp_id, corp_danger, npc_corp ) {
-          var img = '<td><img src="https://imageserver.eveonline.com/Corporation/{0}_64.png" height="32" width="32"></td>'.format( corp_id )
+          var img = '<td class="blank_thumb"><img src="https://imageserver.eveonline.com/Corporation/{0}_64.png" height="32" width="32"></td>'.format( corp_id )
           var corp_class = ""
           if ( corp_danger > 50 ) {
             corp_class = 'class="danger"'
@@ -162,103 +162,71 @@
           return img + name
       }
       function toggleCorpGrouping() {
-          var vis = table.column(9).visible();
-          table.column(9).visible(!vis, false);
+          var vis = !table.column(9).visible();
           if ( vis ) {
-              table.button(0).text( 'Ungroup' )
-              table.column(9).order( 'asc' )
-              table.column(8).visible( false, false );
-              table.column(10).visible( false, false );
-              table.rowGroup().enable()
+            table.button(0).text( 'Group by Corporation')
+            table.column(1).order( 'asc' )
+            table.rowGroup().disable()
           } else {
-               table.button(0).text( 'Group by Corporation')
-               table.column(1).order( 'asc' )
-               table.column(8).visible( true, false );
-               table.column(10).visible( true, false );
-               table.rowGroup().disable()
+            table.button(0).text( 'Ungroup' )
+            table.column(9).order( 'asc' )
+            table.rowGroup().enable()
           }
+          table.column(8).visible( vis, false );
+          table.column(9).visible( vis, false);
+          table.column(10).visible( vis, false );
           table.draw();
       }
       $(document).ready( function () {
-          table = $( '#chars' ).DataTable( {
-              order: [ [ 9, 'asc' ], [ 1, 'asc' ] ],
-              data: char_data,
-              deferRender: true,
-              createdRow: rowFormatting.postProcess,
-              columns: [
-                { 
-                  data: 'thumb', 
-                  render: rowFormatting.char_thumb
-                },
-                { data: 'name',
-                  render: rowFormatting.char_name
-                },
-                { data: 'age' },
-                { 
-                  data: 'danger',
-                  className: 'dt-body-center'
-                },
-                { 
-                  data: 'gang',
-                  className: 'dt-body-center'
-                },
-                { 
-                  data: 'security',
-                  className: 'dt-body-center',
-                  render: $.fn.dataTable.render.number( ',', '.', 2 )
-                },
-                { 
-                  data: 'kills',
-                  className: 'dt-body-center'
-                },
-                { 
-                  data: 'losses',
-                  className: 'dt-body-center'
-                },
-                { 
-                  data: 'corp_thumb',
-                  render: rowFormatting.corp_thumb
-                },
-                { 
-                  data: 'corp_name',
-                  render: rowFormatting.corp_name
-                },
-                { data: 'alliance_name' },
-                { data: 'last_kill' },
-                { 
-                  data: 'corp_age',
-                  render: rowFormatting.corp_age
-                },
-                { data: 'corp_id' },
-                { data: 'corp_danger' },
-                { data: 'is_npc_corp' },
-                { data: 'char_id' },
-              ],
-              columnDefs: [
-                  { "orderable": false, "targets": [ 0, 2, 8, 11, 12 ] },
-                  { "visible": true, "targets": [ 9 ] },
-                  { "visible": false, "targets": [ 13, 14, 15, 16 ] }
-              ],
-              buttons: [
-                  {
-                    text: 'Group by Corporation',
-                    action: function ( e, dt, node, config ) {
-                        toggleCorpGrouping();
-                    }
-                  }
-              ],
-              info: false,
-              paging: true,
-              rowGroup: {
-                  dataSrc: 'corp_name',
-                  enable: false,
-                  startRender: rowFormatting.row_group
-              },
-              searching: true,
-              fixedHeader: true,
-              autoWidth: false,
-           });
-           table.button().container().appendTo( $( '#group-button' ) )
+        table = $( '#chars' ).DataTable( {
+          order: [ [ 9, 'asc' ], [ 1, 'asc' ] ],
+          data: char_data,
+          deferRender: true,
+          createdRow: dataFormatting.postProcess,
+          columns: [
+            { data: 'thumb', render: dataFormatting.char_thumb },
+            { data: 'name', render: dataFormatting.char_name },
+            { data: 'age' },
+            { data: 'danger', className: 'dt-body-center' },
+            { data: 'gang', className: 'dt-body-center' },
+            { data: 'security', className: 'dt-body-center', render: $.fn.dataTable.render.number( ',', '.', 2 ) },
+            { data: 'kills', className: 'dt-body-center' },
+            { data: 'losses', className: 'dt-body-center' },
+            { data: 'corp_thumb', render: dataFormatting.corp_thumb },
+            { data: 'corp_name', render: dataFormatting.corp_name },
+            { data: 'alliance_name' },
+            { data: 'last_kill' },
+            { data: 'corp_age', render: dataFormatting.corp_age },
+            { data: 'corp_id' },
+            { data: 'corp_danger' },
+            { data: 'is_npc_corp' },
+            { data: 'char_id' },
+          ],
+          columnDefs: [
+            { "orderable": false, "targets": [ 0, 2, 8, 11, 12 ] },
+            { "visible": true, "targets": [ 9 ] },
+            { "visible": false, "targets": [ 13, 14, 15, 16 ] }
+          ],
+          buttons: [
+            {
+              text: 'Group by Corporation',
+              action: function ( e, dt, node, config ) {
+                toggleCorpGrouping();
+              }
+            }
+          ],
+          info: false,
+          paging: true,
+          rowGroup: {
+            dataSrc: 'corp_name',
+            enable: false,
+            startRender: dataFormatting.row_group
+          },
+          searching: true,
+          fixedHeader: true,
+          autoWidth: false,
+         });
+         table.button().container().appendTo( $( '#group-button' ) )
       });
     </script>
   </body>

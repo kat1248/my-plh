@@ -28,7 +28,7 @@ td.thumb img {
     border: 2px solid #000;
 }
 td.blank_thumb img {
-    border: 2px solid White;
+    border: 2px solid transparent;
 }
 td.danger_thumb img {
     border: 2px solid Red;
