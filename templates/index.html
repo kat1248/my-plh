@@ -136,6 +136,8 @@
               $('td:eq(8)', row).addClass( 'danger_thumb' );
             } else if ( data.is_npc_corp ) {
               $('td:eq(8)', row).addClass( 'safe_thumb' );              
+            } else {
+              $('td:eq(8)', row).addClass( 'blank_thumb' );
             }
           }
         }
