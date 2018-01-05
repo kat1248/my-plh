@@ -2,8 +2,9 @@
 
 ## Purpose
 
-I have been a user of Pirate's Little Helper for awhile. This is
-intended to replace that service for the Eve corporation, Signal Cartel.
+This is a utility for Eve Online, it looks up a list of characters and presents threat data. 
+I have been a user of [Pirate's Little Helper](eve-plh.com) for awhile and this is
+intended to replace that service for the Eve corporation, [Signal Cartel](http://www.eve-scout.com/signal-cartel/).
 
 ## Requirements
 
@@ -64,3 +65,10 @@ WSGIScriptAlias / /var/www/html/my-plh/my-plh.wsgi
 ```
 $ sudo apachectl restart
 ```
+
+## References
+
+1. [ZKillboard API](https://github.com/zKillboard/zKillboard/wiki/API-(Statistics))
+2. [CCP ESI API](https://esi.tech.ccp.is/latest/)
+3. [Pirate's Little Helper](eve-plh.com)
+4. [Javascript DataTables](https://datatables.net/)
