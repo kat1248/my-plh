@@ -64,7 +64,7 @@
           <input type="reset" /></p>
       </form>
       <form style="color:White;">
-        <input type="checkbox" onclick="toggleCorpGrouping()" id="group-button" value="group"> Group by Corporation<br>
+        <input type="checkbox" onclick="toggleCorpGrouping()" class="group-button" value="group"> Group by Corporation<br>
       </form>
     </div>
     <script type="text/javascript">
@@ -160,17 +160,17 @@
           return img + name;
       }
       function toggleCorpGrouping() {
-          var vis = !table.column(9).visible();
-          if ( vis ) {
-            table.column(1).order( 'asc' );
-            table.rowGroup().disable();
-          } else {
+          var group = document.querySelector('.group-button').checked;
+          if ( group ) {
             table.column(9).order( 'asc' );
             table.rowGroup().enable();
+          } else {
+            table.column(1).order( 'asc' );
+            table.rowGroup().disable();
           }
-          table.column(8).visible( vis, false );
-          table.column(9).visible( vis, false);
-          table.column(10).visible( vis, false );
+          table.column(8).visible( !group, false );
+          table.column(9).visible( !group, false);
+          table.column(10).visible( !group, false );
           table.draw();
       }
       $(document).ready( function () {
@@ -214,7 +214,6 @@
           stateSave: true,
           autoWidth: false,
          });
-        /* table.button().container().appendTo( $( '#group-button' ) )*/
       });
     </script>
   </body>
