@@ -27,6 +27,8 @@ console.setLevel(logging.DEBUG)
 console.setFormatter(formatter)
 logger.addHandler(console)
 
+logger.info('Starting server')
+
 application = Flask(__name__)
 application.config.from_object(config)
 
@@ -37,10 +39,8 @@ cache = Cache(
 )
 
 zkill_request_headers = {
-    'user-agent': 'kat1248@gmail.com - SC Little Helper - sclh.servegame.org'
+    'user-agent': config.ESI_USER_AGENT
 }
-
-zkill_api = 'https://zkillboard.com/api'
 
 # map of name to nickname, easter egg
 nicknames = {
@@ -48,11 +48,13 @@ nicknames = {
     'Portia Tigana': 'Tiggs'
 }
 
-# maximum number of characters to fetch (for speed)
-max_chars = config.MAX_CHARS
-
 # create the app
-esiapp = App.create(config.ESI_SWAGGER_JSON)
+while True:
+    try:
+        esiapp = App.create(config.ESI_SWAGGER_JSON)
+        break
+    except Exception as inst:
+        logger.error(inst)
 
 # init the client
 esiclient = EsiClient(
@@ -132,21 +134,25 @@ def lookup_alliance(alliance_id):
 
 
 def lookup_zkill_character(character_id):
-    req = '{0}/stats/characterID/{1}/'.format(zkill_api, character_id)
+    req = '{0}/stats/characterID/{1}/'.format(config.ZKILL_API, character_id)
     r = requests.get(req, headers=zkill_request_headers)
-    return json.loads(r.text)
+    if r.status_code != 200:
+        logger.info('zkillboard lookup error %d for %d', r.status_code, character_id)
+        return None
+    else:
+        return json.loads(r.text)
 
 
 @cache.memoize()
 def lookup_corp_danger(corporation_id):
-    req = '{0}/stats/corporationID/{1}/'.format(zkill_api, corporation_id)
+    req = '{0}/stats/corporationID/{1}/'.format(config.ZKILL_API, corporation_id)
     r = requests.get(req, headers=zkill_request_headers)
     d = json.loads(r.text)
     return d.get('dangerRatio', 0)
 
 
 def fetch_last_kill(character_id):
-    req = '{0}/api/characterID/{1}/limit/1/'.format(zkill_api, character_id)
+    req = '{0}/api/characterID/{1}/limit/1/'.format(config.ZKILL_API, character_id)
     r = requests.get(req, headers=zkill_request_headers)
     d = json.loads(r.text)[0]
     when = d['killmail_time'].split("T")[0]
@@ -224,6 +230,9 @@ def record2info(character_id, ccp_info, zkill_info):
     alliance_id = ccp_info.get('alliance_id', 0)
     corp_start = lookup_corp_startdate(character_id)
 
+    if zkill_info is None:
+        zkill_info = []
+
     kills = zkill_info.get('shipsDestroyed', 0)
     losses = zkill_info.get('shipsLost', 0)
     has_killboard = (kills != 0) or (losses != 0)
@@ -300,7 +309,7 @@ def multi_character_info_list(names):
 @application.route('/')
 @templated('index.html')
 def index():
-    return dict(charlist=[], max_chars=max_chars)
+    return dict(charlist=[], max_chars=config.MAX_CHARS)
 
 
 @application.route('/local', methods=['POST', 'GET'])
@@ -309,9 +318,10 @@ def local():
     names = []
     if request.method == 'POST':
         name_list = request.form['characters']
-        names = name_list.splitlines()[:max_chars]
+        names = name_list.splitlines()[:config.MAX_CHARS]
+        logger.info('request for %d names', len(names))
     charlist = multi_character_info_list(names)
-    return dict(charlist=charlist, max_chars=max_chars)
+    return dict(charlist=charlist, max_chars=config.MAX_CHARS)
 
 
 @application.route('/test')
@@ -327,7 +337,7 @@ def test1():
         'Heior', 'Highshott', 'Irisfar Senpai', 'Jettero Prime',
         'Jocelyn Rotineque', 'Dar Mineret'
     ]
-    return dict(charlist=multi_character_info_list(names), max_chars=max_chars)
+    return dict(charlist=multi_character_info_list(names), max_chars=config.MAX_CHARS)
 
 
 @application.route('/favicon.ico')

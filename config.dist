@@ -19,3 +19,9 @@ ESI_SECRET_KEY = ''  # your secret key
 ESI_CLIENT_ID = ''  # your client ID
 ESI_CALLBACK = 'http://%s:%d/sso/callback' % (HOST, PORT)  # the callback URI you gave CCP
 ESI_USER_AGENT = ''
+
+# -----------------------------------------------------
+# zkillboard Configs
+# -----------------------------------------------------
+ZKILL_API = 'https://zkillboard.com/api'
+
