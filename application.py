@@ -18,19 +18,10 @@ import config
 from esipy import App
 from esipy import EsiClient
 
-logger = logging.getLogger(__name__)
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
-console.setFormatter(formatter)
-logger.addHandler(console)
-
-logger.info('Starting server')
-
 application = Flask(__name__)
 application.config.from_object(config)
+
+application.logger.info('Starting server')
 
 cache = Cache(
     application,
@@ -54,7 +45,7 @@ while True:
         esiapp = App.create(config.ESI_SWAGGER_JSON)
         break
     except Exception as inst:
-        logger.error(inst)
+        application.logger.error(inst)
 
 # init the client
 esiclient = EsiClient(
@@ -63,6 +54,46 @@ esiclient = EsiClient(
     headers={'User-Agent': config.ESI_USER_AGENT},
     retry_requests=True
 )
+
+
+# This class will create the standard retry decorator.
+# It only retries on a 500 status code.
+class Retry:
+    # By default, retry up to this many times.
+    MAX_TRIES = 3
+    # This method holds the validation check.
+    def is_valid(self, resp):
+        # By default, only retry if a status code is 500.
+        return resp.status_code == 500
+
+    def __call__(self, func):
+        def retried_func(*args, **kwargs):
+            tries = 0
+            while True:
+                resp = func(*args, **kwargs)
+                if self.is_valid(resp) or tries >= self.MAX_TRIES:
+                    break
+                tries += 1
+            return resp
+        return retried_func
+
+
+# This will retry on 4xx failures only.
+class RetryOnAuthFailure(Retry):
+    def is_valid(self, resp):
+        return not (resp.status_code >= 400 and resp.status_code < 500)
+
+
+# This will retry on *any* 5xx error, and do so up to 5 times.
+class RetryOnServerError(Retry):
+    MAX_TRIES = 5
+    def is_valid(self, resp):
+        return resp.status_code < 500
+
+# Now we create the decorator "functions" (callables, really).
+retry_on_500 = Retry()
+retry_on_auth_failure = RetryOnAuthFailure()
+retry_on_server_error = RetryOnServerError()
 
 
 def templated(template=None):
@@ -132,28 +163,26 @@ def lookup_alliance(alliance_id):
     response = esiclient.request(op)
     return response.data[0].get('alliance_name', '')
 
+@retry_on_server_error
+def fetch_zkill_data(endpoint):
+    req = '{0}/{1}'.format(config.ZKILL_API, endpoint)
+    return requests.get(req, headers=zkill_request_headers)
+
 
 def lookup_zkill_character(character_id):
-    req = '{0}/stats/characterID/{1}/'.format(config.ZKILL_API, character_id)
-    r = requests.get(req, headers=zkill_request_headers)
-    if r.status_code != 200:
-        logger.info('zkillboard lookup error %d for %d', r.status_code, character_id)
-        return None
-    else:
-        return json.loads(r.text)
+    r = fetch_zkill_data('stats/characterID/{0}/'.format(character_id))
+    return json.loads(r.text)
 
 
 @cache.memoize()
 def lookup_corp_danger(corporation_id):
-    req = '{0}/stats/corporationID/{1}/'.format(config.ZKILL_API, corporation_id)
-    r = requests.get(req, headers=zkill_request_headers)
+    r = fetch_zkill_data('stats/corporationID/{0}/'.format(corporation_id))
     d = json.loads(r.text)
     return d.get('dangerRatio', 0)
 
 
 def fetch_last_kill(character_id):
-    req = '{0}/api/characterID/{1}/limit/1/'.format(config.ZKILL_API, character_id)
-    r = requests.get(req, headers=zkill_request_headers)
+    r = fetch_zkill_data('api/characterID/{0}/limit/1/'.format(character_id))
     d = json.loads(r.text)[0]
     when = d['killmail_time'].split("T")[0]
     victim = d['victim']
@@ -319,7 +348,7 @@ def local():
     if request.method == 'POST':
         name_list = request.form['characters']
         names = name_list.splitlines()[:config.MAX_CHARS]
-        logger.info('request for %d names', len(names))
+        application.logger.info('request for %d names', len(names))
     charlist = multi_character_info_list(names)
     return dict(charlist=charlist, max_chars=config.MAX_CHARS)
 
