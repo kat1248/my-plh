@@ -61,6 +61,7 @@ esiclient = EsiClient(
 class Retry:
     # By default, retry up to this many times.
     MAX_TRIES = 3
+
     # This method holds the validation check.
     def is_valid(self, resp):
         # By default, only retry if a status code is 500.
@@ -87,8 +88,10 @@ class RetryOnAuthFailure(Retry):
 # This will retry on *any* 5xx error, and do so up to 5 times.
 class RetryOnServerError(Retry):
     MAX_TRIES = 5
+
     def is_valid(self, resp):
         return resp.status_code < 500
+
 
 # Now we create the decorator "functions" (callables, really).
 retry_on_500 = Retry()
@@ -162,6 +165,7 @@ def lookup_alliance(alliance_id):
     )
     response = esiclient.request(op)
     return response.data[0].get('alliance_name', '')
+
 
 @retry_on_server_error
 def fetch_zkill_data(endpoint):
