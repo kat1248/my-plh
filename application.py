@@ -18,6 +18,9 @@ import config
 from esipy import App
 from esipy import EsiClient
 
+### kill_analyzer
+from collections import Counter
+
 application = Flask(__name__)
 application.config.from_object(config)
 
@@ -127,6 +130,16 @@ def name2id_op(name):
     return op
 
 
+### kill_analyzer
+def id2names(thing_ids):
+    op = esiapp.op['post_universe_names'](
+        ids=thing_ids,
+        datasource=config.ESI_DATASOURCE
+    )
+    response = esiclient.request(op)
+    return response.data
+
+
 def id2record_op(character_id):
     op = esiapp.op['get_characters_character_id'](
         character_id=character_id,
@@ -205,6 +218,38 @@ def last_kill_activity(cid, has_killboard):
             return 'kill {0}'.format(when)
     else:
         return ''
+
+
+### kill_analyzer
+def fetch_zkill_list(character_id):
+    r = fetch_zkill_data('api/kills/characterID/{0}/'.format(character_id))
+    return json.loads(r.text)
+
+
+EXPLORERS = ['33470', '606']
+
+### kill_analyzer
+def show_kill_history(character_id):
+    zkill_info = lookup_zkill_character(character_id)
+    if zkill_info is None:
+        return None
+    kills = zkill_info.get('shipsDestroyed', 0)
+    losses = zkill_info.get('shipsLost', 0)
+    if kills:
+        kill_list = fetch_zkill_list(character_id)
+        ships = Counter(['{0}'.format(k['victim'].get('ship_type_id', 0)) for k in kill_list])
+        names = id2names(ships.keys())
+        exp_kills = [s for s in ships.keys() if s in explorers]
+        print exp_kills
+        exp = 0
+        for name in names:
+            sid = '{0}'.format(name['id'])
+            print 'killed {0} {1}s'.format(ships[sid], name['name'])
+            if sid in EXPLORERS:
+                exp += ships[sid]
+        print 'killed {0} explorer ships'.format(exp)
+    else:
+        print 'no kills'
 
 
 def seconds2time(total_seconds):
@@ -379,4 +424,5 @@ def icon():
 
 
 if __name__ == "__main__":
+    #show_kill_history(92942102)
     application.run(port=config.PORT, host=config.HOST, debug=config.DEBUG)
