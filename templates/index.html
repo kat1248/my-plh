@@ -113,13 +113,13 @@
           corp_age: function ( data, type, row ) {
             return data + ' days';
           },
-          row_group: function ( rows, group ) {
+          row_group: function ( rows, corp_name ) {
             var first_row = rows.data()[0]
             var alliance = first_row.alliance_name;
             var corp_id = first_row.corp_id;
             var corp_danger = first_row.corp_danger;
             var npc_corp = first_row.is_npc_corp;
-            return groupRow( group, alliance, corp_id, corp_danger, npc_corp );
+            return groupRow( corp_name, alliance, corp_id, corp_danger, npc_corp );
           },
           postProcess: function( row, data, dataIndex ) {
             if ( data.danger > 50) {
