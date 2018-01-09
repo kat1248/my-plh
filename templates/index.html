@@ -18,6 +18,7 @@
         <thead>
           <tr class="header">
             <th></th>
+            <th></th>
             <th>Name</th>
             <th>Age</th>
             <th>Danger Level</th>
@@ -37,6 +38,7 @@
         </thead>
         <tfoot>
           <tr class="header">
+            <th></th>
             <th></th>
             <th>Name</th>
             <th>Age</th>
@@ -123,20 +125,20 @@
           },
           postProcess: function( row, data, dataIndex ) {
             if ( data.danger > 50) {
-              $('td:eq(0)', row).addClass( 'danger_thumb' );
-              $('td:eq(3)', row).addClass( 'danger' );
+              $('td:eq(1)', row).addClass( 'danger_thumb' );
+              $('td:eq(4)', row).addClass( 'danger' );
             } else {
-              $('td:eq(0)', row).addClass( 'thumb' );
+              $('td:eq(1)', row).addClass( 'thumb' );
             }
             if ( data.security < 0 ) {
-              $('td:eq(5)', row).addClass( 'danger' );
+              $('td:eq(6)', row).addClass( 'danger' );
             }
             if ( data.corp_danger > 50 ) {
-              $('td:eq(8)', row).addClass( 'danger_thumb' );
+              $('td:eq(9)', row).addClass( 'danger_thumb' );
             } else if ( data.is_npc_corp ) {
-              $('td:eq(8)', row).addClass( 'safe_thumb' );              
+              $('td:eq(9)', row).addClass( 'safe_thumb' );
             } else {
-              $('td:eq(8)', row).addClass( 'blank_thumb' );
+              $('td:eq(9)', row).addClass( 'blank_thumb' );
             }
           }
         }
@@ -163,46 +165,51 @@
       function toggleCorpGrouping() {
           var group = document.querySelector('.group-button').checked;
           if ( group ) {
-            table.column(9).order( 'asc' );
+            table.column( 'corp_name' ).order( 'asc' );
             table.rowGroup().enable();
           } else {
-            table.column(1).order( 'asc' );
+            table.column( 'name' ).order( 'asc' );
             table.rowGroup().disable();
           }
-          table.column(8).visible( !group, false );
-          table.column(9).visible( !group, false);
-          table.column(10).visible( !group, false );
+          table.column( 'corp_thumb' ).visible( !group, false );
+          table.column( 'corp_name' ).visible( !group, false );
+          table.column( 'alliance_name' ).visible( !group, false );
           table.draw();
+      }
+      function format ( d ) {
+        // `d` is the original data object for the row
+        return '<tr>'+
+               '<td>Full name:</td>'+
+               '<td>'+d.name+'</td>'+
+               '<td>Kills:</td>'+
+               '<td>'+d.kills+'</td>'+
+               '</tr>';
       }
       $(document).ready( function () {
         table = $( '#chars' ).DataTable( {
-          order: [ [ 9, 'asc' ], [ 1, 'asc' ] ],
+          order: [ [ 10, 'asc' ], [ 2, 'asc' ] ],
           data: char_data,
           deferRender: true,
           createdRow: dataFormatting.postProcess,
           columns: [
-            { data: 'thumb', render: dataFormatting.char_thumb },
+            { data: null, 'className': 'details-control', 'orderable': false, 'defaultContent': '' },
+            { data: 'thumb', render: dataFormatting.char_thumb, 'orderable': false },
             { data: 'name', render: dataFormatting.char_name },
-            { data: 'age' },
+            { data: 'age', 'orderable': false },
             { data: 'danger', className: 'dt-body-center' },
             { data: 'gang', className: 'dt-body-center' },
             { data: 'security', className: 'dt-body-center', render: $.fn.dataTable.render.number( ',', '.', 2 ) },
             { data: 'kills', className: 'dt-body-center' },
             { data: 'losses', className: 'dt-body-center' },
-            { data: 'corp_thumb', render: dataFormatting.corp_thumb },
+            { data: 'corp_thumb', render: dataFormatting.corp_thumb, 'orderable': false },
             { data: 'corp_name', render: dataFormatting.corp_name },
             { data: 'alliance_name' },
-            { data: 'last_kill' },
-            { data: 'corp_age', render: dataFormatting.corp_age },
-            { data: 'corp_id' },
-            { data: 'corp_danger' },
-            { data: 'is_npc_corp' },
-            { data: 'char_id' },
-          ],
-          columnDefs: [
-            { "orderable": false, "targets": [ 0, 2, 8, 11, 12 ] },
-            { "visible": true, "targets": [ 8, 9, 10 ] },
-            { "visible": false, "targets": [ 13, 14, 15, 16 ] }
+            { data: 'last_kill', 'orderable': false },
+            { data: 'corp_age', render: dataFormatting.corp_age, 'orderable': false },
+            { data: 'corp_id', 'visible': false },
+            { data: 'corp_danger', 'visible': false },
+            { data: 'is_npc_corp', 'visible': false },
+            { data: 'char_id', 'visible': false },
           ],
           info: false,
           paging: true,
@@ -216,6 +223,26 @@
           autoWidth: false,
         });
         toggleCorpGrouping();
+
+        $('#chars tbody').on('click', 'td.details-control', function () {
+          var tr = $(this).parents('tr');
+          var row = table.row( tr );
+
+          if ( row.child.isShown() ) {
+            // This row is already open - close it
+            row.child.hide();
+            tr.removeClass('shown');
+          } else {
+            // Open this row (the format() function would return the data to be shown)
+            if ( row.child() && row.child().length )
+            {
+              row.child.show();
+            } else {
+              row.child( format(row.data()) ).show();
+            }
+            tr.addClass('shown');
+          }
+        } );
       });
     </script>
   </body>
