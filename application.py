@@ -4,7 +4,7 @@
 # eve api = https://esi.tech.ccp.is/latest/
 # plh = https://github.com/rischwa/eve-plh
 # DataTables = https://datatables.net/
-# my id = 92942102
+# my id = 92942102,94358635
 
 from flask import Flask, render_template, request, redirect, url_for
 from datetime import date, datetime, timedelta, tzinfo
@@ -131,13 +131,13 @@ def name2id_op(name):
 
 
 ### kill_analyzer
-def id2names(thing_ids):
-    op = esiapp.op['post_universe_names'](
-        ids=thing_ids,
-        datasource=config.ESI_DATASOURCE
-    )
-    response = esiclient.request(op)
-    return response.data
+# def id2names(thing_ids):
+#     op = esiapp.op['post_universe_names'](
+#         ids=thing_ids,
+#         datasource=config.ESI_DATASOURCE
+#     )
+#     response = esiclient.request(op)
+#     return response.data
 
 
 def id2record_op(character_id):
@@ -201,7 +201,7 @@ def lookup_corp_danger(corporation_id):
 def fetch_last_kill(character_id):
     r = fetch_zkill_data('api/characterID/{0}/limit/1/'.format(character_id))
     d = json.loads(r.text)[0]
-    when = d['killmail_time'].split("T")[0]
+    when = d['killmail_time'].split('T')[0]
     victim = d['victim']
     who = victim.get('character_id', 0)
     return when, who
@@ -221,35 +221,48 @@ def last_kill_activity(cid, has_killboard):
 
 
 ### kill_analyzer
+@cache.memoize()
 def fetch_zkill_list(character_id):
     r = fetch_zkill_data('api/kills/characterID/{0}/'.format(character_id))
     return json.loads(r.text)
 
 
-EXPLORERS = ['29248', '11188', '11192', '605', '11172', '607', '11182', '586', '33468', '33470']
+### kill_analyzer
+@cache.memoize()
+def fetch_zkill_list_recent(character_id, seconds):
+    r = fetch_zkill_data('api/kills/characterID/{0}/pastSeconds/{1}/'.format(character_id, seconds))
+    return json.loads(r.text)
+
 
 ### kill_analyzer
-def show_kill_history(character_id):
+@cache.memoize()
+def get_kill_history(character_id):
+    """ returns explorer_kills, total_kills, last_kill_time, kills_last_week """
+    EXPLORERS = ['29248', '11188', '11192', '605', '11172', '607', '11182', '586', '33468', '33470']
+
     zkill_info = lookup_zkill_character(character_id)
     if zkill_info is None:
-        return None
+        return 0, 0, '', 0
+
     kills = zkill_info.get('shipsDestroyed', 0)
-    losses = zkill_info.get('shipsLost', 0)
-    if kills:
-        kill_list = fetch_zkill_list(character_id)
-        ships = Counter(['{0}'.format(k['victim'].get('ship_type_id', 0)) for k in kill_list])
-        names = id2names(ships.keys())
-        exp_kills = [s for s in ships.keys() if s in explorers]
-        print exp_kills
-        exp = 0
-        for name in names:
-            sid = '{0}'.format(name['id'])
-            print 'killed {0} {1}s'.format(ships[sid], name['name'])
-            if sid in EXPLORERS:
-                exp += ships[sid]
-        print 'killed {0} explorer ships'.format(exp)
-    else:
-        print 'no kills'
+    if kills == 0:
+        return 0, 0, '', 0
+
+    exp_total = 0
+    kill_total = 0
+    last_kill_time = ''
+    kills_last_week = 0
+
+    kill_list = fetch_zkill_list(character_id)
+    ships = Counter(['{0}'.format(k['victim'].get('ship_type_id', 0)) for k in kill_list])
+    kill_total = sum(ships.values())
+    exp_total = sum([v for k, v in ships.iteritems() if k in EXPLORERS])
+    last_kill_time = kill_list[-1].get('killmail_time', '').split('T')[0]
+
+    kill_list = fetch_zkill_list_recent(character_id, 60*60*24*7)
+    kills_last_week = len(kill_list)
+
+    return exp_total, kill_total, last_kill_time, kills_last_week
 
 
 def seconds2time(total_seconds):
@@ -423,6 +436,15 @@ def icon():
     return redirect(url_for('static', filename='favicon.ico'), code=302)
 
 
+def test_kill_analyzer(ids):
+    for cid in ids:
+        explorer_kills, total_kills, last_kill_time, kills_last_week = get_kill_history(cid)
+        print '{0} of {1} kills were explorers since {2}.'.format(explorer_kills, total_kills, last_kill_time)
+        print '{0} kills in the last week'.format(kills_last_week)
+
+
 if __name__ == "__main__":
-    #show_kill_history(92942102)
-    application.run(port=config.PORT, host=config.HOST, debug=config.DEBUG)
+    if hasattr(config, 'TEST') and config.TEST:
+        test_kill_analyzer([94358635, 92942102])
+    else:
+        application.run(port=config.PORT, host=config.HOST, debug=config.DEBUG)
