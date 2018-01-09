@@ -226,7 +226,7 @@ def fetch_zkill_list(character_id):
     return json.loads(r.text)
 
 
-EXPLORERS = ['33470', '606']
+EXPLORERS = ['29248', '11188', '11192', '605', '11172', '607', '11182', '586', '33468', '33470']
 
 ### kill_analyzer
 def show_kill_history(character_id):
