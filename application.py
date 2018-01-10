@@ -6,7 +6,7 @@
 # DataTables = https://datatables.net/
 # my id = 92942102,94358635
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from datetime import date, datetime, timedelta, tzinfo
 import pytz
 import requests
@@ -378,6 +378,16 @@ def multi_character_info_list(names):
                 charlist.append(data)
     return charlist
 
+@application.route('/info', methods=['POST', 'GET'])
+def info():
+    print request.headers
+    names = []
+    if request.method == 'POST':
+        name_list = request.form['characters']
+        names = name_list.splitlines()[:config.MAX_CHARS]
+        application.logger.info('request for %d names', len(names))
+    charlist = multi_character_info_list(names)
+    return jsonify(charlist)
 
 @application.route('/')
 @templated('index.html')

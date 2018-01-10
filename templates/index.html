@@ -61,12 +61,13 @@
         </tbody>
       </table> 
       <form action="{{ url_for('local') }}" method="POST">
-        <textarea name="characters" placeholder="Enter Character Names (maximum {{ max_chars }})" rows=10 cols=35></textarea>
+        <textarea id="name-list" name="characters" placeholder="Enter Character Names (maximum {{ max_chars }})" rows=10 cols=35></textarea>
         <p><input type="Submit" value="Submit" maxlength="1000"/>
           <input type="reset" /></p>
       </form>
       <form style="color:White;">
         <input type="checkbox" onclick="toggleCorpGrouping()" class="group-button" value="group"> Group by Corporation<br>
+        <input type="checkbox" onclick="testSending()" class="group-button" value="group"> Send Data<br>
       </form>
     </div>
     <script type="text/javascript">
@@ -75,7 +76,6 @@
       {% for char in charlist %}
         { "name": "{{ char.name }}",
           "thumb": "",
-          "image": "https://image.eveonline.com/Character/{{ char.character_id }}_512.jpg",
           "has_killboard": {% if char.has_killboard %}true{% else %}false{% endif %},
           "age": "{{ char.age }}",
           "danger": {{ char.danger }},
@@ -91,7 +91,7 @@
           "corp_id": {{ char.corp_id }},
           "corp_danger": {{ char.corp_danger }},
           "is_npc_corp": {% if char.is_npc_corp %}true{% else %}false{% endif %},
-          "char_id": {{ char.character_id }},
+          "character_id": {{ char.character_id }},
           "recent_explorer_total": {{ char.recent_explorer_total }},
           "recent_kill_total": {{ char.recent_kill_total }},
           "last_kill_time": "{{ char.last_kill_time }}",
@@ -102,7 +102,7 @@
         return {
           char_name: function ( data, type, row ) {
             if ( row.has_killboard ) {
-              return '<a href="https://zkillboard.com/character/{0}/" target="_blank" rel="noopener">{1}</a>'.format( row.char_id, row.name );
+              return '<a href="https://zkillboard.com/character/{0}/" target="_blank" rel="noopener">{1}</a>'.format( row.character_id, row.name );
             } else {
               return data;
             }
@@ -111,8 +111,8 @@
             return '<a href="https://zkillboard.com/corporation/{0}/" target="_blank" rel="noopener">{1}</a>'.format( row.corp_id, row.corp_name );
           },
           char_thumb: function ( data, type, row ) {
-            var img = '<img src="https://image.eveonline.com/Character/{0}_64.jpg" height="32" width="32" alt="{1} thumbnail" align="middle">'.format( row.char_id, row.name );
-            var span = '<span><img src="https://image.eveonline.com/Character/{0}_512.jpg" alt="{1} portrait"></span>'.format( row.char_id, row.name );
+            var img = '<img src="https://image.eveonline.com/Character/{0}_64.jpg" height="32" width="32" alt="{1} thumbnail" align="middle">'.format( row.character_id, row.name );
+            var span = '<span><img src="https://image.eveonline.com/Character/{0}_512.jpg" alt="{1} portrait"></span>'.format( row.character_id, row.name );
             return img + span;
           },
           corp_thumb: function ( data, type, row ) {
@@ -157,6 +157,17 @@
       String.prototype.format = function () {
           var args = arguments;
           return this.replace(/\{(\d+)\}/g, function (m, n) { return args[n]; });
+      }
+      function testSending() {
+        var names = document.getElementById( 'name-list' ).value;
+        $.post("info",
+               { characters: names },
+               function( data, status ) {
+                 alert( 'data ' + data.length )
+                 table.clear();
+                 table.rows.add( data );
+                 table.draw();
+               });
       }
       function groupRow( group, alliance_name, corp_id, corp_danger, npc_corp ) {
           var img = '<td class="blank_thumb"><img src="https://imageserver.eveonline.com/Corporation/{0}_64.png" height="32" width="32"></td>'.format( corp_id );
@@ -225,7 +236,7 @@
             { data: 'corp_id', visible: false },
             { data: 'corp_danger', visible: false },
             { data: 'is_npc_corp', visible: false },
-            { data: 'char_id', visible: false },
+            { data: 'character_id', visible: false },
           ],
           info: false,
           paging: true,
