@@ -71,7 +71,8 @@
     </div>
     <script type="text/javascript">
       "use strict";
-      var char_data = [ {% for char in charlist %}
+      var char_data = [ 
+      {% for char in charlist %}
         { "name": "{{ char.name }}",
           "thumb": "",
           "image": "https://image.eveonline.com/Character/{{ char.character_id }}_512.jpg",
@@ -90,7 +91,12 @@
           "corp_id": {{ char.corp_id }},
           "corp_danger": {{ char.corp_danger }},
           "is_npc_corp": {% if char.is_npc_corp %}true{% else %}false{% endif %},
-          "char_id": {{ char.character_id }}, }, {% endfor %}]
+          "char_id": {{ char.character_id }},
+          "recent_explorer_total": {{ char.recent_explorer_total }},
+          "recent_kill_total": {{ char.recent_kill_total }},
+          "last_kill_time": "{{ char.last_kill_time }}",
+          "kills_last_week": {{ char.kills_last_week }} }, 
+      {% endfor %}]
       var table;
       var dataFormatting = (function () {
         return {
@@ -105,12 +111,12 @@
             return '<a href="https://zkillboard.com/corporation/{0}/" target="_blank" rel="noopener">{1}</a>'.format( row.corp_id, row.corp_name );
           },
           char_thumb: function ( data, type, row ) {
-            var img = '<img src="https://image.eveonline.com/Character/{0}_64.jpg" height="32" width="32" alt="{1} thumbnail">'.format( row.char_id, row.name );
+            var img = '<img src="https://image.eveonline.com/Character/{0}_64.jpg" height="32" width="32" alt="{1} thumbnail" align="middle">'.format( row.char_id, row.name );
             var span = '<span><img src="https://image.eveonline.com/Character/{0}_512.jpg" alt="{1} portrait"></span>'.format( row.char_id, row.name );
             return img + span;
           },
           corp_thumb: function ( data, type, row ) {
-            return '<img src="https://imageserver.eveonline.com/Corporation/{0}_64.png" height="32" width="32" alt="{1} thumbnail" title="Corporation Danger Level: {2}">'.format( row.corp_id, row.corp_name, row.corp_danger );
+            return '<img src="https://imageserver.eveonline.com/Corporation/{0}_64.png" height="32" width="32" alt="{1} thumbnail" title="Corporation Danger Level: {2}" align="middle">'.format( row.corp_id, row.corp_name, row.corp_danger );
           },
           corp_age: function ( data, type, row ) {
             return data + ' days';
@@ -140,6 +146,11 @@
             } else {
               $('td:eq(9)', row).addClass( 'blank_thumb' );
             }
+            if ( data.kills == 0 ) {
+              $('td:eq(0)', row).addClass( 'blank-control' );
+            } else {
+              $('td:eq(0)', row).addClass( 'details-control' );
+            }
           }
         }
       })();
@@ -165,10 +176,10 @@
       function toggleCorpGrouping() {
           var group = document.querySelector('.group-button').checked;
           if ( group ) {
-            table.column( 'corp_name' ).order( 'asc' );
+            table.column( 10 ).order( 'asc' );
             table.rowGroup().enable();
           } else {
-            table.column( 'name' ).order( 'asc' );
+            table.column( 2 ).order( 'asc' );
             table.rowGroup().disable();
           }
           table.column( 'corp_thumb' ).visible( !group, false );
@@ -176,15 +187,20 @@
           table.column( 'alliance_name' ).visible( !group, false );
           table.draw();
       }
-      function format ( d ) {
+      function formatKills ( d ) {
         // `d` is the original data object for the row
-        return '<tr>'+
-               '<td>Full name:</td>'+
-               '<td>'+d.name+'</td>'+
-               '<td>Kills:</td>'+
-               '<td>'+d.kills+'</td>'+
-               '</tr>';
+        if ( d.kills == 0 ) {
+          return ''
+        } else {
+          return '<table class="embedded"><thead><tr><td>Explorers Killed</td><td>Total Killed</td><td class="dt-body-center">Since</td><td>Kills in Last Week</td></tr></thead>' +
+               '<tr><td class="dt-body-center">' + d.recent_explorer_total + '</td>' +
+               '<td class="dt-body-center">' + d.recent_kill_total + '</td>' +
+               '<td class="dt-body-center">' + d.last_kill_time + '</td>' +
+               '<td class="dt-body-center">' + d.kills_last_week + '</td>' +
+               '</tr></table>';
+        }
       }
+
       $(document).ready( function () {
         table = $( '#chars' ).DataTable( {
           order: [ [ 10, 'asc' ], [ 2, 'asc' ] ],
@@ -192,7 +208,7 @@
           deferRender: true,
           createdRow: dataFormatting.postProcess,
           columns: [
-            { data: null, className: 'details-control', orderable: false, defaultContent: '' },
+            { data: null, orderable: false, defaultContent: '' },
             { data: 'thumb', render: dataFormatting.char_thumb, orderable: false },
             { data: 'name', render: dataFormatting.char_name },
             { data: 'age', orderable: false },
@@ -222,6 +238,7 @@
           stateSave: true,
           autoWidth: false,
         });
+
         toggleCorpGrouping();
 
         $('#chars tbody').on('click', 'td.details-control', function () {
@@ -238,7 +255,7 @@
             {
               row.child.show();
             } else {
-              row.child( format(row.data()) ).show();
+              row.child( formatKills( row.data() ) ).show();
             }
             tr.addClass('shown');
           }

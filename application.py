@@ -17,8 +17,6 @@ import logging
 import config
 from esipy import App
 from esipy import EsiClient
-
-### kill_analyzer
 from collections import Counter
 
 application = Flask(__name__)
@@ -130,16 +128,6 @@ def name2id_op(name):
     return op
 
 
-### kill_analyzer
-# def id2names(thing_ids):
-#     op = esiapp.op['post_universe_names'](
-#         ids=thing_ids,
-#         datasource=config.ESI_DATASOURCE
-#     )
-#     response = esiclient.request(op)
-#     return response.data
-
-
 def id2record_op(character_id):
     op = esiapp.op['get_characters_character_id'](
         character_id=character_id,
@@ -220,38 +208,25 @@ def last_kill_activity(cid, has_killboard):
         return ''
 
 
-### kill_analyzer
 @cache.memoize()
 def fetch_zkill_list(character_id):
     r = fetch_zkill_data('api/kills/characterID/{0}/'.format(character_id))
     return json.loads(r.text)
 
 
-### kill_analyzer
 @cache.memoize()
 def fetch_zkill_list_recent(character_id, seconds):
     r = fetch_zkill_data('api/kills/characterID/{0}/pastSeconds/{1}/'.format(character_id, seconds))
     return json.loads(r.text)
 
 
-### kill_analyzer
 @cache.memoize()
-def get_kill_history(character_id):
+def get_kill_history(character_id, kills):
     """ returns explorer_kills, total_kills, last_kill_time, kills_last_week """
     EXPLORERS = ['29248', '11188', '11192', '605', '11172', '607', '11182', '586', '33468', '33470']
 
-    zkill_info = lookup_zkill_character(character_id)
-    if zkill_info is None:
-        return 0, 0, '', 0
-
-    kills = zkill_info.get('shipsDestroyed', 0)
     if kills == 0:
         return 0, 0, '', 0
-
-    exp_total = 0
-    kill_total = 0
-    last_kill_time = ''
-    kills_last_week = 0
 
     kill_list = fetch_zkill_list(character_id)
     ships = Counter(['{0}'.format(k['victim'].get('ship_type_id', 0)) for k in kill_list])
@@ -328,6 +303,8 @@ def record2info(character_id, ccp_info, zkill_info):
     losses = zkill_info.get('shipsLost', 0)
     has_killboard = (kills != 0) or (losses != 0)
 
+    recent_explorer_total, recent_kill_total, last_kill_time, kills_last_week = get_kill_history(character_id, kills)
+
     char_info = {
         'name': name,
         'character_id': character_id,
@@ -344,7 +321,11 @@ def record2info(character_id, ccp_info, zkill_info):
         'corp_age': seconds2days(age2seconds(corp_start)),
         'is_npc_corp': corp_id < 2000000,
         'corp_danger': lookup_corp_danger(corp_id),
-        'alliance_name': lookup_alliance(alliance_id)
+        'alliance_name': lookup_alliance(alliance_id),
+        'recent_explorer_total': recent_explorer_total,
+        'recent_kill_total': recent_kill_total,
+        'last_kill_time': last_kill_time,
+        'kills_last_week': kills_last_week
     }
     return char_info
 
@@ -436,15 +417,5 @@ def icon():
     return redirect(url_for('static', filename='favicon.ico'), code=302)
 
 
-def test_kill_analyzer(ids):
-    for cid in ids:
-        explorer_kills, total_kills, last_kill_time, kills_last_week = get_kill_history(cid)
-        print '{0} of {1} kills were explorers since {2}.'.format(explorer_kills, total_kills, last_kill_time)
-        print '{0} kills in the last week'.format(kills_last_week)
-
-
 if __name__ == "__main__":
-    if hasattr(config, 'TEST') and config.TEST:
-        test_kill_analyzer([94358635, 92942102])
-    else:
-        application.run(port=config.PORT, host=config.HOST, debug=config.DEBUG)
+    application.run(port=config.PORT, host=config.HOST, debug=config.DEBUG)

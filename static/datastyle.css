@@ -60,6 +60,9 @@ td.danger {
 td.safe { 
     color: Green;
 }
+td.blank-control {
+    border: 4px solid transparent;
+}
 td.details-control {
     background: url('../static/details_open.png') no-repeat center center;
     cursor: pointer;
@@ -73,6 +76,18 @@ label {
 table {
     padding: 15px;
     background-color: #1a3d5c;
+}
+table.embedded {
+    padding: 5px 0px 5px 70px;
+    border-bottom: 1px;
+    background-color: White;
+    outline: none;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+table.embedded thead td {
+    font-weight: bold; 
+    border-bottom: 1px solid #111111;
 }
 body {
     font-family: 'Lato',sans-serif;
