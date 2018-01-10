@@ -222,6 +222,7 @@ def fetch_zkill_list_recent(character_id, seconds):
 
 @cache.memoize()
 def get_kill_history(character_id, kills):
+    # TODO: check for solo kills, check for kills vs signal cartel
     """ returns explorer_kills, total_kills, last_kill_time, kills_last_week """
     EXPLORERS = ['29248', '11188', '11192', '605', '11172', '607', '11182', '586', '33468', '33470']
 
