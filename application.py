@@ -378,9 +378,9 @@ def multi_character_info_list(names):
                 charlist.append(data)
     return charlist
 
+
 @application.route('/info', methods=['POST', 'GET'])
 def info():
-    print request.headers
     names = []
     if request.method == 'POST':
         name_list = request.form['characters']
@@ -388,6 +388,7 @@ def info():
         application.logger.info('request for %d names', len(names))
     charlist = multi_character_info_list(names)
     return jsonify(charlist)
+
 
 @application.route('/')
 @templated('index.html')
