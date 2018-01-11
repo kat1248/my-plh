@@ -223,22 +223,36 @@ def fetch_zkill_list_recent(character_id, seconds):
 @cache.memoize()
 def get_kill_history(character_id, kills):
     # TODO: check for solo kills, check for kills vs signal cartel
-    """ returns explorer_kills, total_kills, last_kill_time, kills_last_week """
-    EXPLORERS = ['29248', '11188', '11192', '605', '11172', '607', '11182', '586', '33468', '33470']
+    """ returns dict of recent_explorer_total,
+                        recent_kill_total,
+                        last_kill_time,
+                        kills_last_week """
+    EXPLORER_SHIPS = [
+        '29248', '11188', '11192', '605', '11172', '607', '11182', '586', '33468', '33470']
 
-    if kills == 0:
-        return 0, 0, '', 0
+    exp_total = 0
+    kill_total = 0
+    last_kill_time = ''
+    kills_last_week = 0
 
-    kill_list = fetch_zkill_list(character_id)
-    ships = Counter(['{0}'.format(k['victim'].get('ship_type_id', 0)) for k in kill_list])
-    kill_total = sum(ships.values())
-    exp_total = sum([v for k, v in ships.iteritems() if k in EXPLORERS])
-    last_kill_time = kill_list[-1].get('killmail_time', '').split('T')[0]
+    if kills != 0:
+        kill_list = fetch_zkill_list(character_id)
+        ships = Counter(['{0}'.format(k['victim'].get('ship_type_id', 0)) for k in kill_list])
+        kill_total = sum(ships.values())
+        exp_total = sum([v for k, v in ships.iteritems() if k in EXPLORER_SHIPS])
+        last_kill_time = kill_list[-1].get('killmail_time', '').split('T')[0]
 
-    kill_list = fetch_zkill_list_recent(character_id, 60*60*24*7)
-    kills_last_week = len(kill_list)
+        kill_list = fetch_zkill_list_recent(character_id, 60*60*24*7)
+        kills_last_week = len(kill_list)
 
-    return exp_total, kill_total, last_kill_time, kills_last_week
+    kill_history = {
+        'recent_explorer_total': exp_total,
+        'recent_kill_total': kill_total,
+        'last_kill_time': last_kill_time,
+        'kills_last_week': kills_last_week
+    }
+
+    return kill_history
 
 
 def seconds2time(total_seconds):
@@ -304,8 +318,6 @@ def record2info(character_id, ccp_info, zkill_info):
     losses = zkill_info.get('shipsLost', 0)
     has_killboard = (kills != 0) or (losses != 0)
 
-    recent_explorer_total, recent_kill_total, last_kill_time, kills_last_week = get_kill_history(character_id, kills)
-
     char_info = {
         'name': name,
         'character_id': character_id,
@@ -322,14 +334,12 @@ def record2info(character_id, ccp_info, zkill_info):
         'corp_age': seconds2days(age2seconds(corp_start)),
         'is_npc_corp': corp_id < 2000000,
         'corp_danger': lookup_corp_danger(corp_id),
-        'alliance_name': lookup_alliance(alliance_id),
-        'recent_explorer_total': recent_explorer_total,
-        'recent_kill_total': recent_kill_total,
-        'last_kill_time': last_kill_time,
-        'kills_last_week': kills_last_week
+        'alliance_name': lookup_alliance(alliance_id)
     }
-    return char_info
 
+    kill_history = get_kill_history(character_id, kills)
+    char_info.update(kill_history)
+    return char_info
 
 def get_ccp_records(id_list):
     records = []
