@@ -237,7 +237,7 @@ def get_kill_history(character_id, kills):
 
     if kills != 0:
         kill_list = fetch_zkill_list(character_id)
-        ships = Counter(['{0}'.format(k['victim'].get('ship_type_id', 0)) for k in kill_list])
+        ships = Counter(['{0}'.format(k.get('victim',{}).get('ship_type_id', 0)) for k in kill_list])
         kill_total = sum(ships.values())
         exp_total = sum([v for k, v in ships.iteritems() if k in EXPLORER_SHIPS])
         last_kill_time = kill_list[-1].get('killmail_time', '').split('T')[0]
