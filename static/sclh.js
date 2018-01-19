@@ -66,6 +66,7 @@ String.prototype.format = function () {
 
 function sendNames() {
   var names = document.getElementById( 'name-list' ).value;
+  $(document).ajaxStart(function () { $("html").addClass("wait"); });
   $.post("info",
     { characters: names },
     function( data, status ) {
@@ -73,6 +74,7 @@ function sendNames() {
       table.rows.add( data );
       table.draw();  
       document.getElementById( 'names-form' ).reset();
+      $(document).ajaxStop(function () { $("html").removeClass("wait"); });
     });
 }
 

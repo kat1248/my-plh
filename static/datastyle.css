@@ -1,3 +1,6 @@
+html.wait, html.wait * {
+    cursor: wait !important;
+}
 @font-face {
     font-family: static;
     src: url('static.woff');
