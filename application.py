@@ -18,6 +18,7 @@ import config
 from esipy import App
 from esipy import EsiClient
 from collections import Counter
+import time
 
 application = Flask(__name__)
 application.config.from_object(config)
@@ -174,6 +175,7 @@ def fetch_zkill_data(endpoint):
     return requests.get(req, headers=zkill_request_headers)
 
 
+@cache.memoize()
 def lookup_zkill_character(character_id):
     r = fetch_zkill_data('stats/characterID/{0}/'.format(character_id))
     return json.loads(r.text)
@@ -228,7 +230,9 @@ def get_kill_history(character_id, kills):
                         last_kill_time,
                         kills_last_week """
     EXPLORER_SHIPS = [
-        '29248', '11188', '11192', '605', '11172', '607', '11182', '586', '33468', '33470']
+        '29248', '11188', '11192', '605', '11172',
+        '607', '11182', '586', '33468', '33470'
+        ]
 
     exp_total = 0
     kill_total = 0
@@ -237,7 +241,7 @@ def get_kill_history(character_id, kills):
 
     if kills != 0:
         kill_list = fetch_zkill_list(character_id)
-        ships = Counter(['{0}'.format(k.get('victim',{}).get('ship_type_id', 0)) for k in kill_list])
+        ships = Counter(['{0}'.format(k.get('victim', {}).get('ship_type_id', 0)) for k in kill_list])
         kill_total = sum(ships.values())
         exp_total = sum([v for k, v in ships.iteritems() if k in EXPLORER_SHIPS])
         last_kill_time = kill_list[-1].get('killmail_time', '').split('T')[0]
@@ -341,6 +345,7 @@ def record2info(character_id, ccp_info, zkill_info):
     char_info.update(kill_history)
     return char_info
 
+
 def get_ccp_records(id_list):
     records = []
     operations = []
@@ -396,7 +401,10 @@ def info():
         name_list = request.form['characters']
         names = name_list.splitlines()[:config.MAX_CHARS]
         application.logger.info('request for %d names', len(names))
+    start = time.time()
     charlist = multi_character_info_list(names)
+    end = time.time()
+    application.logger.info('request took {0} seconds'.format(end - start))
     return jsonify(charlist)
 
 
