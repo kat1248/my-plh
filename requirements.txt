@@ -16,7 +16,7 @@ pyasn1==0.4.5
 pyswagger==0.8.39
 python-jose==3.0.1
 pytz==2019.1
-PyYAML==5.1
+PyYAML==5.4
 requests==2.21.0
 rsa>=4.1
 six==1.12.0
