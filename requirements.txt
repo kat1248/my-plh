@@ -1,7 +1,7 @@
 certifi==2019.3.9
 chardet==3.0.4
 Click==7.0
-ecdsa==0.13.2
+ecdsa==0.13.3
 EsiPy==1.0.0
 Flask==1.0.2
 Flask-Caching==1.7.1
